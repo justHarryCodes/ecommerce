@@ -10,7 +10,8 @@ const Schema = z.object({
   name:             z.string().min(1).max(200),
   description:      z.string().max(5000).optional(),
   shortDescription: z.string().max(300).optional(),
-  price:            z.number().min(0),
+  price:            z.number().min(0).optional(),
+  priceNote:        z.string().max(100).optional(),
   comparePrice:     z.number().min(0).optional(),
   stockQuantity:    z.number().int().min(0).default(0),
   categoryId:       z.string().uuid().optional(),
@@ -19,6 +20,9 @@ const Schema = z.object({
   imageUrl:         z.string().optional(),
   isActive:         z.boolean().default(true),
   isFeatured:       z.boolean().default(false),
+  sizeOptions:      z.array(z.string()).default([]),
+  materialOptions:  z.array(z.string()).default([]),
+  colorOptions:     z.array(z.string()).default([]),
 })
 
 export async function GET(req: NextRequest) {
@@ -81,12 +85,14 @@ export async function POST(req: NextRequest) {
   const rows = await query(`
     INSERT INTO products (
       store_id, category_id, subcategory_id, name, slug, description, short_description,
-      price, compare_price, stock_quantity, image_url, images, is_active, is_featured
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *
+      price, price_note, compare_price, stock_quantity, image_url, images, is_active, is_featured,
+      size_options, material_options, color_options
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *
   `, [
     store.id, categoryId, d.subcategoryId || null, d.name, slug,
-    d.description || null, d.shortDescription || null, d.price, d.comparePrice || null,
-    d.stockQuantity, imageUrl, d.images, d.isActive, d.isFeatured
+    d.description || null, d.shortDescription || null, d.price ?? null, d.priceNote || null, d.comparePrice || null,
+    d.stockQuantity, imageUrl, d.images, d.isActive, d.isFeatured,
+    d.sizeOptions, d.materialOptions, d.colorOptions
   ])
 
   await cacheDelPattern(`products:${store.id}*`)

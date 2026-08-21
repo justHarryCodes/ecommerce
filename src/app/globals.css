@@ -7,12 +7,17 @@
 
 
 /* ─── CSS Variables ─────────────────────────────────────────────────────────── */
+/* Brand palette — "Forge & Form" (placeholder company name/branding).
+   Fixed, single brand — no more per-vendor runtime theming. A warm
+   copper/bronze accent over a neutral charcoal-on-white base, chosen to
+   read as premium/industrial (metalwork + fine joinery) rather than the
+   old marketplace's bright marketplace-yellow. Swap these two blocks for
+   the real brand color once the client provides one. */
 :root {
-  /* Platform colors */
-  --accent: #f59e0b;
-  --accent-light: #fde68a;
-  --accent-dark: #b45309;
-  --accent-foreground: #000;
+  --accent: #b5622a;
+  --accent-light: #f0d5b8;
+  --accent-dark: #7c3f16;
+  --accent-foreground: #fff;
 
   /* Surfaces */
   --bg: #ffffff;
@@ -111,11 +116,12 @@ body {
   animation: badge-pop 0.3s ease-out;
 }
 
-/* ─── Storefront CSS variables (overridden per store) ───────────────────────── */
+/* ─── Storefront CSS variables (fixed brand — kept for components that
+   still reference --sf-accent rather than --accent directly) ───────────── */
 .storefront {
-  --sf-accent: #f59e0b;
-  --sf-accent-light: #fde68a;
-  --sf-accent-dark: #b45309;
+  --sf-accent: #b5622a;
+  --sf-accent-light: #f0d5b8;
+  --sf-accent-dark: #7c3f16;
 }
 
 /* ─── Smooth scroll ─────────────────────────────────────────────────────────── */

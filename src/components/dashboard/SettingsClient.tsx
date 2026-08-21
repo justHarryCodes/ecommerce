@@ -4,8 +4,8 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Store,
-  Palette,
-  CreditCard,
+  MapPin,
+  Compass,
   Check,
   Loader2,
   Upload,
@@ -28,28 +28,15 @@ interface Props {
   store: StoreType;
 }
 
-const ACCENT_PRESETS = [
-  { label: "Yellow", value: "#f59e0b" },
-  { label: "Indigo", value: "#6366f1" },
-  { label: "Rose", value: "#f43f5e" },
-  { label: "Emerald", value: "#10b981" },
-  { label: "Sky", value: "#0ea5e9" },
-  { label: "Violet", value: "#8b5cf6" },
-  { label: "Orange", value: "#f97316" },
-  { label: "Teal", value: "#14b8a6" },
-];
+type BusinessHours = { mon_fri?: string; sat?: string; sun?: string };
+type SocialLinks = { facebook?: string; instagram?: string; linkedin?: string; twitter?: string };
 
 export default function SettingsClient({ store: initial }: Props) {
   const router = useRouter();
   const [store, setStore] = useState(() => ({
     ...initial,
-    // Normalize theme fields so the selectors always have a concrete value to compare against
-    storefrontThemeMode:
-      initial.storefrontThemeMode ?? initial.themeMode ?? initial.theme_mode ?? "both",
-    storefrontAccentColor:
-      initial.storefrontAccentColor ?? initial.accentColor ?? initial.accent_color ?? "#f59e0b",
-    paymentPreference:
-      initial.paymentPreference ?? initial.payment_preference ?? "paystack",
+    businessHours: (initial.businessHours ?? initial.business_hours ?? {}) as BusinessHours,
+    socialLinks: (initial.socialLinks ?? initial.social_links ?? {}) as SocialLinks,
   }));
   const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -98,8 +85,14 @@ export default function SettingsClient({ store: initial }: Props) {
     }
   }
 
-  const change = (key: keyof StoreType, value: unknown) =>
+  const change = (key: keyof typeof store, value: unknown) =>
     setStore((s) => ({ ...s, [key]: value }));
+
+  const changeHours = (key: keyof BusinessHours, value: string) =>
+    setStore((s) => ({ ...s, businessHours: { ...s.businessHours, [key]: value } }));
+
+  const changeSocial = (key: keyof SocialLinks, value: string) =>
+    setStore((s) => ({ ...s, socialLinks: { ...s.socialLinks, [key]: value } }));
 
   async function uploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -113,7 +106,7 @@ export default function SettingsClient({ store: initial }: Props) {
       if (!res.ok) throw new Error(data.error);
       change("logoUrl", data.url);
       toast.success("Logo uploaded");
-    } catch (err) {
+    } catch {
       toast.error("Logo upload failed");
     } finally {
       setLogoUploading(false);
@@ -132,21 +125,13 @@ export default function SettingsClient({ store: initial }: Props) {
           logoUrl: store.logoUrl ?? store.logo_url,
           phone: store.phone,
           whatsapp: store.whatsapp,
-          storefrontThemeMode:
-            store.storefrontThemeMode ?? store.themeMode ?? store.theme_mode,
-          storefrontAccentColor:
-            store.storefrontAccentColor ??
-            store.accentColor ??
-            store.accent_color,
-          bankName: store.bankName ?? store.bank_name,
-          bankAccountNumber:
-            store.bankAccountNumber ?? store.bank_account_number,
-          bankAccountName: store.bankAccountName ?? store.bank_account_name,
-          paymentPreference:
-            store.paymentPreference ?? store.payment_preference,
-          paystackPublicKey:
-            store.paystackPublicKey ?? store.paystack_public_key,
-          return_policy: store.return_policy ?? store.returnPolicy ?? null,
+          email: store.email,
+          address: store.address,
+          businessHours: store.businessHours,
+          mapEmbedUrl: store.mapEmbedUrl ?? store.map_embed_url,
+          socialLinks: store.socialLinks,
+          vision: store.vision,
+          mission: store.mission,
         }),
       });
       const data = await res.json();
@@ -169,35 +154,35 @@ export default function SettingsClient({ store: initial }: Props) {
             Settings
           </h1>
           <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-            Manage your store details and storefront appearance
+            Manage the company profile shown across the site
           </p>
         </div>
         <a
-          href={`/store/${store.slug}`}
+          href="/"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-900 dark:hover:text-white transition-colors"
         >
           <ExternalLink className="w-4 h-4" />
-          View storefront
+          View site
         </a>
       </div>
 
       <Tip id="settings-guide" variant="tip">
-        <strong>Tips:</strong> Add a WhatsApp number to get an order button in your cart. Set your bank details so customers know how to pay. Pick an accent colour that matches your brand — it highlights buttons and links on your storefront.
+        <strong>Tips:</strong> This info feeds the footer, Contact page, and quote-request notifications across the site. Add a WhatsApp number to enable the floating chat button and &ldquo;Request a Quote&rdquo; shortcuts.
       </Tip>
 
-      {/* Store Info */}
+      {/* Company Info */}
       <section className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-6 space-y-5">
         <h2 className="font-bold text-surface-900 dark:text-white flex items-center gap-2">
           <Store className="w-4 h-4" />
-          Store information
+          Company information
         </h2>
 
         {/* Logo */}
         <div>
           <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-            Store logo
+            Logo
           </label>
           <div className="flex items-center gap-4">
             {(store.logoUrl ?? store.logo_url) ? (
@@ -238,32 +223,13 @@ export default function SettingsClient({ store: initial }: Props) {
         <div className="grid gap-4">
           <div>
             <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-              Store name
+              Company name
             </label>
             <input
               value={store.name}
               onChange={(e) => change("name", e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-              Store URL
-            </label>
-            <div className="flex items-center rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden">
-              <span className="px-3 py-3 text-sm text-surface-400 bg-surface-50 dark:bg-surface-800 border-r border-surface-200 dark:border-surface-700 shrink-0">
-                /store/
-              </span>
-              <input
-                value={store.slug}
-                disabled
-                className="flex-1 px-3 py-3 bg-surface-50 dark:bg-surface-800 text-surface-400 text-sm cursor-not-allowed"
-              />
-            </div>
-            <p className="text-xs text-surface-400 mt-1">
-              Store URL cannot be changed
-            </p>
           </div>
 
           <div>
@@ -303,176 +269,143 @@ export default function SettingsClient({ store: initial }: Props) {
               />
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Storefront Theme */}
-      <section className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-6 space-y-5">
-        <h2 className="font-bold text-surface-900 dark:text-white flex items-center gap-2">
-          <Palette className="w-4 h-4" />
-          Storefront theme
-        </h2>
-
-        {/* Accent color */}
-        <div>
-          <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-3">
-            Accent color
-          </label>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {ACCENT_PRESETS.map((preset) => (
-              <button
-                key={preset.value}
-                onClick={() => change("storefrontAccentColor", preset.value)}
-                title={preset.label}
-                className={`w-8 h-8 rounded-full border-2 transition-all ${
-                  store.storefrontAccentColor === preset.value
-                    ? "border-surface-900 dark:border-white scale-110"
-                    : "border-transparent hover:scale-110"
-                }`}
-                style={{ backgroundColor: preset.value }}
-              >
-                {store.storefrontAccentColor === preset.value && (
-                  <Check className="w-4 h-4 text-white mx-auto drop-shadow" />
-                )}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={store.storefrontAccentColor ?? "#f59e0b"}
-              onChange={(e) => change("storefrontAccentColor", e.target.value)}
-              className="w-10 h-10 rounded-lg border border-surface-200 dark:border-surface-700 cursor-pointer"
-            />
-            <input
-              value={store.storefrontAccentColor ?? "#f59e0b"}
-              onChange={(e) => {
-                if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) {
-                  change("storefrontAccentColor", e.target.value);
-                }
-              }}
-              className="px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white text-sm font-mono w-28 focus:outline-none focus:ring-2 focus:ring-accent-400"
-            />
-            <div
-              className="flex-1 h-10 rounded-xl"
-              style={{ backgroundColor: store.storefrontAccentColor ?? "#f59e0b" }}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Payment settings */}
-      <section className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-6 space-y-5">
-        <h2 className="font-bold text-surface-900 dark:text-white flex items-center gap-2">
-          <CreditCard className="w-4 h-4" />
-          Payment settings
-        </h2>
-
-        <div>
-          <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-            Accepted payment methods
-          </label>
-          <div className="grid sm:grid-cols-3 gap-2">
-            {(["paystack", "bank_transfer", "both"] as const).map((method) => (
-              <button
-                key={method}
-                onClick={() => change("paymentPreference", method)}
-                className={`py-2.5 px-3 rounded-xl text-sm font-medium border-2 transition-all text-left ${
-                  store.paymentPreference === method
-                    ? "border-accent-400 bg-accent-50 dark:bg-accent-950 text-accent-700 dark:text-accent-300"
-                    : "border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800"
-                }`}
-              >
-                {method === "paystack"
-                  ? "Paystack only"
-                  : method === "bank_transfer"
-                    ? "Bank transfer only"
-                    : "Both methods"}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {(store.paymentPreference === "bank_transfer" ||
-          store.paymentPreference === "both") && (
-          <div className="grid gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                Bank name
+                Email
               </label>
               <input
-                value={store.bankName ?? store.bank_name ?? ""}
-                onChange={(e) => change("bankName", e.target.value)}
-                placeholder="e.g. Access Bank"
+                value={store.email ?? ""}
+                onChange={(e) => change("email", e.target.value)}
+                type="email"
                 className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
               />
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                  Account number
-                </label>
-                <input
-                  value={
-                    store.bankAccountNumber ?? store.bank_account_number ?? ""
-                  }
-                  onChange={(e) => change("bankAccountNumber", e.target.value)}
-                  placeholder="0123456789"
-                  className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                  Account name
-                </label>
-                <input
-                  value={store.bankAccountName ?? store.bank_account_name ?? ""}
-                  onChange={(e) => change("bankAccountName", e.target.value)}
-                  placeholder="John Doe"
-                  className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                Address
+              </label>
+              <input
+                value={store.address ?? ""}
+                onChange={(e) => change("address", e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
+              />
             </div>
           </div>
-        )}
-
-        {(store.paymentPreference === "paystack" ||
-          store.paymentPreference === "both") && (
-          <div>
-            <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-              Paystack public key
-            </label>
-            <input
-              value={store.paystackPublicKey ?? store.paystack_public_key ?? ""}
-              onChange={(e) => change("paystackPublicKey", e.target.value)}
-              placeholder="pk_live_..."
-              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm font-mono"
-            />
-            <p className="text-xs text-surface-400 mt-1">
-              Found in your Paystack dashboard under Settings → API Keys
-            </p>
-          </div>
-        )}
+        </div>
       </section>
 
-      {/* Return & Refund Policy */}
+      {/* Business hours & map */}
       <section className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-6 space-y-5">
         <h2 className="font-bold text-surface-900 dark:text-white flex items-center gap-2">
-          Return &amp; Refund Policy
+          <MapPin className="w-4 h-4" />
+          Hours &amp; location
+        </h2>
+
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+              Mon–Fri
+            </label>
+            <input
+              value={store.businessHours.mon_fri ?? ""}
+              onChange={(e) => changeHours("mon_fri", e.target.value)}
+              placeholder="8:00 AM - 6:00 PM"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+              Saturday
+            </label>
+            <input
+              value={store.businessHours.sat ?? ""}
+              onChange={(e) => changeHours("sat", e.target.value)}
+              placeholder="9:00 AM - 4:00 PM"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+              Sunday
+            </label>
+            <input
+              value={store.businessHours.sun ?? ""}
+              onChange={(e) => changeHours("sun", e.target.value)}
+              placeholder="Closed"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+            Google Maps embed URL
+          </label>
+          <input
+            value={store.mapEmbedUrl ?? store.map_embed_url ?? ""}
+            onChange={(e) => change("mapEmbedUrl", e.target.value)}
+            placeholder="https://www.google.com/maps/embed?..."
+            className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
+          />
+          <p className="text-xs text-surface-400 mt-1">
+            Google Maps → Share → Embed a map → copy the src URL. Shown on the Contact page.
+          </p>
+        </div>
+      </section>
+
+      {/* Social links */}
+      <section className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-6 space-y-5">
+        <h2 className="font-bold text-surface-900 dark:text-white flex items-center gap-2">
+          Social links
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {(["facebook", "instagram", "linkedin", "twitter"] as const).map((key) => (
+            <div key={key}>
+              <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5 capitalize">
+                {key}
+              </label>
+              <input
+                value={store.socialLinks[key] ?? ""}
+                onChange={(e) => changeSocial(key, e.target.value)}
+                placeholder={`https://${key}.com/...`}
+                className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Vision & Mission */}
+      <section className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-6 space-y-5">
+        <h2 className="font-bold text-surface-900 dark:text-white flex items-center gap-2">
+          <Compass className="w-4 h-4" />
+          Vision &amp; mission
         </h2>
         <div>
           <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-            Return &amp; Refund Policy
+            Vision
           </label>
           <textarea
-            value={store.return_policy ?? store.returnPolicy ?? ""}
-            onChange={(e) => change("return_policy", e.target.value)}
-            rows={5}
-            placeholder="e.g. Returns accepted within 7 days of delivery. Item must be unused and in original packaging. Contact us via WhatsApp to initiate a return."
-            className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white placeholder:text-surface-300 dark:placeholder:text-surface-600 focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm resize-none"
+            value={store.vision ?? ""}
+            onChange={(e) => change("vision", e.target.value)}
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm resize-none"
           />
-          <p className="text-xs text-surface-400 mt-1">Shown to customers at checkout.</p>
         </div>
+        <div>
+          <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+            Mission
+          </label>
+          <textarea
+            value={store.mission ?? ""}
+            onChange={(e) => change("mission", e.target.value)}
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm resize-none"
+          />
+        </div>
+        <p className="text-xs text-surface-400">Shown on the About page.</p>
       </section>
 
       {/* Account security — email change */}

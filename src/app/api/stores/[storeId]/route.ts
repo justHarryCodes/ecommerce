@@ -26,15 +26,20 @@ export async function PATCH(
     logoUrl: 'logo_url',
     phone: 'phone',
     whatsapp: 'whatsapp',
-    storefrontThemeMode: 'storefront_theme_mode',
-    storefrontAccentColor: 'storefront_accent_color',
-    paymentPreference: 'payment_preference',
-    bankName: 'bank_name',
-    bankAccountNumber: 'bank_account_number',
-    bankAccountName: 'bank_account_name',
-    paystackPublicKey: 'paystack_public_key',
     return_policy: 'return_policy',
+    // Company profile (single-company mode)
+    email: 'email',
+    address: 'address',
+    businessHours: 'business_hours',
+    mapEmbedUrl: 'map_embed_url',
+    socialLinks: 'social_links',
+    vision: 'vision',
+    mission: 'mission',
   }
+
+  // Columns that are JSONB — the object must be serialized before binding,
+  // otherwise `pg` sends it as an unparseable string like "[object Object]".
+  const JSON_COLUMNS = new Set(['business_hours', 'social_links'])
 
   const sets: string[] = []
   const vals: unknown[] = []
@@ -44,7 +49,7 @@ export async function PATCH(
     const col = fieldMap[key]
     if (col) {
       sets.push(`${col} = $${i++}`)
-      vals.push(val)
+      vals.push(JSON_COLUMNS.has(col) && val !== null ? JSON.stringify(val) : val)
     }
   }
   if (!sets.length) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })

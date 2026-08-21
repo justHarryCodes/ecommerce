@@ -8,11 +8,17 @@ import { z } from "zod";
 import toast from "react-hot-toast";
 import { Loader2, X, ImageIcon } from "lucide-react";
 import type { Category, Product } from "@/types";
+import { TagInput } from "@/components/dashboard/TagInput";
 
 const schema = z.object({
   name: z.string().min(2, "Product name is required"),
   description: z.string().optional(),
-  price: z.coerce.number().min(0.01, "Price must be at least ₦0.01"),
+  // Price is optional — the catalog can show a fixed price, a "from ₦X"
+  // note (priceNote), or neither ("Request a quote"). Kept as a plain
+  // string here (empty string allowed) and converted to a number — or
+  // omitted entirely — in onSubmit, to avoid z.coerce turning "" into 0.
+  price: z.string().optional(),
+  priceNote: z.string().max(100).optional(),
   comparePrice: z.coerce.number().optional(),
   stockQuantity: z.coerce.number().min(0, "Stock cannot be negative").int(),
   categoryId: z.string().optional(),
@@ -38,6 +44,9 @@ export default function ProductForm({ categories, product }: Props) {
   );
   const [uploading, setUploading] = useState(false);
   const [selectedCatId, setSelectedCatId] = useState(product?.category_id ?? "");
+  const [sizeOptions, setSizeOptions] = useState<string[]>(product?.size_options ?? []);
+  const [materialOptions, setMaterialOptions] = useState<string[]>(product?.material_options ?? []);
+  const [colorOptions, setColorOptions] = useState<string[]>(product?.color_options ?? []);
 
   // Build category tree: top-level cats with their subcategories
   const topCats = categories.filter((c) => !c.parent_id);
@@ -50,7 +59,8 @@ export default function ProductForm({ categories, product }: Props) {
     defaultValues: {
       name: product?.name ?? "",
       description: product?.description ?? "",
-      price: product?.price ?? 0,
+      price: product?.price != null ? String(product.price) : "",
+      priceNote: product?.price_note ?? "",
       comparePrice: product?.compare_price ?? undefined,
       stockQuantity: product?.stock_quantity ?? 0,
       categoryId: product?.category_id ?? "",
@@ -87,10 +97,14 @@ export default function ProductForm({ categories, product }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
+          price: data.price ? Number(data.price) : undefined,
           imageUrl: imageUrl,
           images: imageUrl ? [imageUrl] : [],
           categoryId: data.categoryId || undefined,
           subcategoryId: data.subcategoryId || undefined,
+          sizeOptions,
+          materialOptions,
+          colorOptions,
         }),
       });
 
@@ -167,10 +181,10 @@ export default function ProductForm({ categories, product }: Props) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-            Price (₦) <span className="text-red-500">*</span>
+            Price (₦)
           </label>
           <input {...register("price")} type="number" step="0.01" min="0"
-            className={inputClass} placeholder="0.00" />
+            className={inputClass} placeholder="Leave blank to hide price" />
           {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
         </div>
         <div>
@@ -180,6 +194,40 @@ export default function ProductForm({ categories, product }: Props) {
           <input {...register("comparePrice")} type="number" step="0.01" min="0"
             className={inputClass} placeholder="Strike-through price" />
         </div>
+      </div>
+
+      {/* Price note */}
+      <div>
+        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+          Price note
+        </label>
+        <input {...register("priceNote")} className={inputClass}
+          placeholder="e.g. From ₦450,000 or Contact for quote" />
+        <p className="text-xs text-surface-400 mt-1">
+          Shown instead of (or alongside) the price on the catalog — useful when pricing depends on size/materials.
+        </p>
+      </div>
+
+      {/* Catalog options */}
+      <div className="grid sm:grid-cols-3 gap-4">
+        <TagInput
+          label="Size options"
+          values={sizeOptions}
+          onChange={setSizeOptions}
+          placeholder="e.g. 3m Wide"
+        />
+        <TagInput
+          label="Material options"
+          values={materialOptions}
+          onChange={setMaterialOptions}
+          placeholder="e.g. Mild Steel"
+        />
+        <TagInput
+          label="Color options"
+          values={colorOptions}
+          onChange={setColorOptions}
+          placeholder="e.g. Charcoal Grey"
+        />
       </div>
 
       {/* Stock */}

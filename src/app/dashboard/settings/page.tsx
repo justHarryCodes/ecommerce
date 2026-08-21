@@ -7,7 +7,7 @@ export default async function SettingsPage() {
   if (!user) redirect("/auth/login");
 
   const store = await getUserStore(user.firebaseUid);
-  if (!store) redirect("/onboarding");
+  if (!store) redirect("/auth/login");
 
   return <SettingsClient store={store} />;
 }

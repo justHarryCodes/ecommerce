@@ -8,18 +8,18 @@ import {
   LayoutDashboard,
   Package,
   FolderTree,
-  ShoppingBag,
   Settings,
   LogOut,
-  ChevronRight,
   X,
   ExternalLink,
-  CreditCard,
+  Wrench,
+  Building2,
+  Image as ImageIcon,
+  Newspaper,
+  UserPlus,
+  Quote,
+  MessageSquare,
   Layout,
-  Tag,
-  Star,
-  Gift,
-  Film,
 } from "lucide-react";
 import { auth } from "@/lib/firebase-client";
 import { signOut } from "firebase/auth";
@@ -27,15 +27,16 @@ import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/quote-requests", label: "Leads", icon: MessageSquare },
   { href: "/dashboard/products", label: "Products", icon: Package },
   { href: "/dashboard/categories", label: "Categories", icon: FolderTree },
-  { href: "/dashboard/orders", label: "Orders", icon: ShoppingBag },
-  { href: "/dashboard/storefront", label: "Store Page", icon: Layout },
-  { href: "/dashboard/reels", label: "Reels", icon: Film },
-  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-  { href: "/dashboard/coupons", label: "Coupons", icon: Tag },
-  { href: "/dashboard/reviews", label: "Reviews", icon: Star },
-  { href: "/dashboard/referral", label: "Refer & Earn", icon: Gift },
+  { href: "/dashboard/services", label: "Services", icon: Wrench },
+  { href: "/dashboard/projects", label: "Projects", icon: Building2 },
+  { href: "/dashboard/gallery", label: "Gallery", icon: ImageIcon },
+  { href: "/dashboard/blog", label: "Blog", icon: Newspaper },
+  { href: "/dashboard/careers", label: "Careers", icon: UserPlus },
+  { href: "/dashboard/testimonials", label: "Testimonials", icon: Quote },
+  { href: "/dashboard/storefront", label: "Homepage Banner", icon: Layout },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
@@ -59,22 +60,15 @@ function SidebarContent({
     router.push("/auth/login");
   };
 
-const ROOT = (process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "awarizon.shop")
-  .replace(/^www\./, "");
-
-const storeUrl = store
-  ? `https://${store.slug}.${ROOT}`
-  : null;
-
-const storeDisplayUrl = store
-  ? `${store.slug}.${ROOT}`
-  : null;
+  // Single-company mode — the public site lives at the root domain.
+  const storeUrl = "/";
+  const storeDisplayUrl = "View public site";
 
   return (
     <div className="flex h-full flex-col">
       {/* Brand */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
-        <Image src="/logo.png" alt="Duka" width={96} height={32} style={{ height: 32, width: "auto" }} priority />
+        <Image src="/logo.png" alt="Logo" width={96} height={32} style={{ height: 32, width: "auto" }} priority />
         {onClose && (
           <button
             onClick={onClose}
@@ -85,19 +79,16 @@ const storeDisplayUrl = store
         )}
       </div>
 
-      {/* Store card */}
-      {store && storeUrl && (
+      {/* Company card */}
+      {store && (
         <div className="mx-4 mt-5 mb-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 px-4 py-3 border border-zinc-200 dark:border-zinc-700">
           <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1.5">
-            Your store
+            Company
           </p>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-base font-bold text-zinc-900 dark:text-zinc-100 truncate">
                 {store.name}
-              </p>
-              <p className="text-xs text-zinc-400 dark:text-zinc-500 truncate mt-0.5">
-                {storeDisplayUrl}
               </p>
             </div>
             <a
@@ -106,7 +97,7 @@ const storeDisplayUrl = store
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs font-semibold text-accent-600 dark:text-accent-400 hover:underline shrink-0 mt-0.5"
             >
-              View <ExternalLink className="h-3 w-3" />
+              {storeDisplayUrl} <ExternalLink className="h-3 w-3" />
             </a>
           </div>
         </div>

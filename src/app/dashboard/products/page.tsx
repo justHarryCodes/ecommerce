@@ -1,6 +1,5 @@
 import { verifySession, getUserStore } from "@/lib/auth";
-import { queryMany, queryOne } from "@/lib/db";
-import { getPlatformSettings } from "@/lib/admin-auth";
+import { queryMany } from "@/lib/db";
 import Link from "next/link";
 import { Plus, Package, Pencil } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -12,36 +11,14 @@ export default async function ProductsPage() {
   const user = await verifySession();
   const store = await getUserStore(user!.firebaseUid);
 
-  const [products, settings, storeRow] = await Promise.all([
-    queryMany<Product & { category_name: string | null }>(
-      `SELECT p.*, c.name AS category_name
-       FROM products p
-       LEFT JOIN categories c ON p.category_id = c.id
-       WHERE p.store_id = $1
-       ORDER BY p.created_at DESC`,
-      [store!.id]
-    ),
-    getPlatformSettings(),
-    queryOne<{ current_plan_id: string | null; plan_expires_at: string | null }>(
-      `SELECT current_plan_id, plan_expires_at FROM stores WHERE id = $1`,
-      [store!.id]
-    ),
-  ]);
-
-  const plan = storeRow?.current_plan_id
-    ? await queryOne<{ name: string; max_products: number }>(
-        'SELECT name, max_products FROM plans WHERE id = $1',
-        [storeRow.current_plan_id]
-      )
-    : null;
-
-  const isPlanActive = storeRow?.plan_expires_at
-    ? new Date(storeRow.plan_expires_at) > new Date()
-    : false;
-
-  const planRequired = settings.require_plan_subscription;
-  const canAddProducts = !planRequired || (isPlanActive && plan !== null);
-  const atLimit = plan && isPlanActive && products.length >= plan.max_products;
+  const products = await queryMany<Product & { category_name: string | null }>(
+    `SELECT p.*, c.name AS category_name
+     FROM products p
+     LEFT JOIN categories c ON p.category_id = c.id
+     WHERE p.store_id = $1
+     ORDER BY p.created_at DESC`,
+    [store!.id]
+  );
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pt-4 lg:pt-0">
@@ -49,43 +26,21 @@ export default async function ProductsPage() {
         <div>
           <h1 className="text-xl font-bold text-surface-900 dark:text-white">Products</h1>
           <p className="text-sm text-surface-500 dark:text-surface-400">
-            {products.length}{plan && isPlanActive ? ` / ${plan.max_products}` : ""} product{products.length !== 1 ? "s" : ""}
-            {plan && isPlanActive ? ` · ${plan.name} plan` : ""}
+            {products.length} product{products.length !== 1 ? "s" : ""}
           </p>
         </div>
-        {canAddProducts && !atLimit ? (
-          <Link
-            href="/dashboard/products/new"
-            className="flex items-center gap-2 bg-accent-400 hover:bg-accent-500 text-black font-semibold px-4 py-2.5 rounded-xl text-sm transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            Add product
-          </Link>
-        ) : (
-          <span className="flex items-center gap-2 bg-surface-100 dark:bg-surface-800 text-surface-400 font-semibold px-4 py-2.5 rounded-xl text-sm cursor-not-allowed opacity-60">
-            <Plus className="w-4 h-4" />
-            Add product
-          </span>
-        )}
+        <Link
+          href="/dashboard/products/new"
+          className="flex items-center gap-2 bg-accent-400 hover:bg-accent-500 text-black font-semibold px-4 py-2.5 rounded-xl text-sm transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          Add product
+        </Link>
       </div>
 
       <Tip id="products-guide" variant="tip">
-        <strong>Product tips:</strong> Add clear photos and a good description — these are the first things shoppers see. Assign a category so products appear in your collections grid. Set a compare price to show a &ldquo;was X, now Y&rdquo; discount on the storefront.
+        <strong>Product tips:</strong> Add clear photos and a good description — these are the first things visitors see. Assign a category so products appear in the right catalog section. Set size/material/color options so visitors know what to ask for when requesting a quote.
       </Tip>
-
-      {/* Plan required but no active plan */}
-      {planRequired && !canAddProducts && (
-        <Tip variant="warning">
-          <strong>Plan subscription required.</strong> You need an active plan to list products. <a href="/dashboard/billing" className="underline font-semibold">Go to Billing →</a> to subscribe to a plan.
-        </Tip>
-      )}
-
-      {/* At product limit */}
-      {atLimit && (
-        <Tip variant="warning">
-          <strong>Product limit reached.</strong> Your {plan?.name} plan allows up to {plan?.max_products} products. <a href="/dashboard/billing" className="underline font-semibold">Upgrade your plan →</a> to add more.
-        </Tip>
-      )}
 
       {products.length === 0 ? (
         <div className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-16 text-center">
@@ -94,26 +49,15 @@ export default async function ProductsPage() {
             No products yet
           </h3>
           <p className="text-sm text-surface-400 mb-6">
-            {canAddProducts
-              ? "Add your first product to start selling on your storefront."
-              : "Subscribe to a plan first, then add products."}
+            Add your first product to start building the catalog.
           </p>
-          {canAddProducts ? (
-            <Link
-              href="/dashboard/products/new"
-              className="inline-flex items-center gap-2 bg-accent-400 hover:bg-accent-500 text-black font-semibold px-5 py-2.5 rounded-xl text-sm transition-all"
-            >
-              <Plus className="w-4 h-4" />
-              Add first product
-            </Link>
-          ) : (
-            <Link
-              href="/dashboard/billing"
-              className="inline-flex items-center gap-2 bg-accent-400 hover:bg-accent-500 text-black font-semibold px-5 py-2.5 rounded-xl text-sm transition-all"
-            >
-              Subscribe to a Plan →
-            </Link>
-          )}
+          <Link
+            href="/dashboard/products/new"
+            className="inline-flex items-center gap-2 bg-accent-400 hover:bg-accent-500 text-black font-semibold px-5 py-2.5 rounded-xl text-sm transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Add first product
+          </Link>
         </div>
       ) : (
         <div className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 overflow-hidden">
@@ -175,7 +119,7 @@ export default async function ProductsPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="text-sm font-semibold text-surface-900 dark:text-white">
-                        {formatCurrency(product.price)}
+                        {product.price != null ? formatCurrency(product.price) : product.price_note ?? "—"}
                       </span>
                       {product.compare_price && (
                         <span className="text-xs text-surface-400 line-through ml-1">
@@ -244,7 +188,7 @@ export default async function ProductsPage() {
                     {product.name}
                   </div>
                   <div className="text-xs text-surface-400 mt-0.5">
-                    {formatCurrency(product.price)} · {product.stock_quantity ?? 0} in stock
+                    {product.price != null ? formatCurrency(product.price) : product.price_note ?? "No price set"} · {product.stock_quantity ?? 0} in stock
                   </div>
                 </div>
                 <Link

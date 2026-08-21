@@ -1,13 +1,8 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { verifySession, getUserStore } from "@/lib/auth";
-import { getPlatformSettings } from "@/lib/admin-auth";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import Topbar from "@/components/dashboard/Topbar";
 import DashboardBottomNav from "@/components/dashboard/DashboardBottomNav";
-import { SubscriptionGuard } from "@/components/dashboard/SubscriptionGuard";
-import TutorialBanner from "@/components/dashboard/TutorialBanner";
-import TawkChat from "@/components/dashboard/TawkChat";
 
 export const dynamic = "force-dynamic";
 
@@ -19,22 +14,23 @@ export default async function DashboardLayout({
   const user = await verifySession();
   if (!user) redirect("/auth/login");
 
-  const [store, settings, headersList] = await Promise.all([
-    getUserStore(user.firebaseUid),
-    getPlatformSettings(),
-    headers(),
-  ]);
-  if (!store) redirect("/onboarding");
-
-  // Enforce setup fee gate — skip for /dashboard/billing itself to avoid redirect loop
-  const pathname = headersList.get("x-pathname") ?? "";
-  const onBillingPage = pathname === "/dashboard/billing" || pathname.startsWith("/dashboard/billing/");
-
-  if (!onBillingPage && settings.require_setup_fee) {
-    const paid =
-      store.subscriptionStatus === "setup_fee_paid" ||
-      store.subscriptionStatus === "subscribed";
-    if (!paid) redirect("/dashboard/billing");
+  const store = await getUserStore(user.firebaseUid);
+  if (!store) {
+    // Should only happen before migrations/002_company_pivot.sql has been
+    // run against the target database — the company row is seeded there.
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8 bg-zinc-50 dark:bg-zinc-950">
+        <div className="max-w-md text-center">
+          <h1 className="text-lg font-bold text-surface-900 dark:text-white mb-2">
+            Company profile not found
+          </h1>
+          <p className="text-sm text-surface-500 dark:text-surface-400">
+            Run <code>migrations/002_company_pivot.sql</code> against this
+            database to seed the company profile before using the dashboard.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -52,10 +48,7 @@ export default async function DashboardLayout({
         <Topbar user={user} store={store} />
         {/* pt-14 = mobile header height; pb-16 = mobile bottom nav height */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 pt-14 lg:pt-6 pb-20 lg:pb-8">
-          <SubscriptionGuard />
-          <TutorialBanner />
           {children}
-          <TawkChat />
         </main>
       </div>
 

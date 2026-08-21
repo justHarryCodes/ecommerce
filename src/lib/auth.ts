@@ -1,12 +1,18 @@
 // ─── Auth helpers (server) ────────────────────────────────────────
-// Schema uses stores.owner_id = Firebase UID (TEXT) directly.
-// No separate users table.
+// Single-company mode: there is exactly one `stores` row (the company
+// profile, seeded by migrations/002_company_pivot.sql). Public pages
+// read it via getCompany(); dashboard routes resolve the logged-in
+// Firebase user to that same row via getUserStore(). There's no more
+// public signup (see: deleted /auth/signup), so "has a Firebase
+// account in this project" is already the access boundary — accounts
+// are created directly in the Firebase console for staff.
 import { cookies, headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { adminAuth } from './firebase-admin'
 import { queryOne, toCamel } from './db'
-import { getPlatformSettings } from './admin-auth'
 import type { Store } from '@/types'
+
+const COMPANY_SLUG = process.env.COMPANY_STORE_SLUG ?? 'forge-and-form'
 
 const SESSION_COOKIE = 'session'
 
@@ -50,14 +56,23 @@ export async function verifySession(): Promise<SessionUser | null> {
   return null;
 }
 
-// Get store owned by this Firebase UID
-export async function getUserStore(firebaseUid: string): Promise<Store | null> {
+// Public: fetch the single company profile row. No auth required — used
+// by every public marketing/catalog page.
+export async function getCompany(): Promise<Store | null> {
   const row = await queryOne(
-    'SELECT * FROM stores WHERE owner_id = $1 AND is_active = true',
-    [firebaseUid]
+    'SELECT * FROM stores WHERE slug = $1 AND is_active = true',
+    [COMPANY_SLUG]
   )
   if (!row) return null
   return toCamel<Store>(row as Record<string, unknown>)
+}
+
+// Dashboard: resolve the logged-in Firebase user to the one company row.
+// `firebaseUid` is accepted (unused) to keep the existing call-site
+// signature (`getUserStore(user.firebaseUid)`) stable across the app.
+export async function getUserStore(firebaseUid: string): Promise<Store | null> {
+  void firebaseUid
+  return getCompany()
 }
 
 // Create session cookie from ID token
@@ -66,19 +81,10 @@ export async function createSessionCookie(idToken: string): Promise<string> {
   return adminAuth.createSessionCookie(idToken, { expiresIn })
 }
 
-// Returns a 402 NextResponse if the setup fee is required and unpaid, else null.
-// Use in any dashboard mutation API route after getUserStore().
-export async function requireSubscription(store: Store): Promise<NextResponse | null> {
-  const settings = await getPlatformSettings()
-  if (!settings.require_setup_fee) return null
-  const paid =
-    store.subscriptionStatus === 'setup_fee_paid' ||
-    store.subscriptionStatus === 'subscribed'
-  if (!paid) {
-    return NextResponse.json(
-      { error: 'Setup fee required. Please complete payment before using this feature.' },
-      { status: 402 }
-    )
-  }
+// No-op in single-company mode — there's no per-vendor subscription/setup
+// fee anymore. Kept as a pass-through so existing call sites don't need
+// to be touched.
+export async function requireSubscription(_store: Store): Promise<NextResponse | null> {
+  void _store
   return null
 }

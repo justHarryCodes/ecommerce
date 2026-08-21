@@ -71,6 +71,17 @@ export interface Store {
   referralCode?: string
   referral_credits?: number
   referralCredits?: number
+  // Company profile (single-company mode — migrations/002_company_pivot.sql)
+  email?: string
+  address?: string
+  businessHours?: Record<string, string>
+  business_hours?: Record<string, string>
+  mapEmbedUrl?: string
+  map_embed_url?: string
+  socialLinks?: Record<string, string>
+  social_links?: Record<string, string>
+  vision?: string
+  mission?: string
 }
 
 export interface Category {
@@ -101,9 +112,13 @@ export interface Product {
   description?: string
   shortDescription?: string
   short_description?: string
-  price: number
+  // Price is optional — the catalog can show a fixed price, a "from ₦X"
+  // note, or nothing at all ("Request a quote").
+  price?: number
   comparePrice?: number
   compare_price?: number
+  priceNote?: string
+  price_note?: string
   stockQuantity?: number
   stock_quantity?: number
   imageUrl?: string
@@ -115,6 +130,13 @@ export interface Product {
   is_featured?: boolean
   sortOrder?: number
   sort_order?: number
+  // Catalog options
+  sizeOptions?: string[]
+  size_options?: string[]
+  materialOptions?: string[]
+  material_options?: string[]
+  colorOptions?: string[]
+  color_options?: string[]
   // Joined fields
   category_name?: string
   category_slug?: string
@@ -122,6 +144,193 @@ export interface Product {
   created_at?: string
   updatedAt?: string
   updated_at?: string
+}
+
+// ═══════════════════════════════════════════
+// Company-pivot content types (migrations/002_company_pivot.sql)
+// Same dual camelCase/snake_case convention as above.
+// ═══════════════════════════════════════════
+
+export interface Service {
+  id: string
+  storeId?: string
+  store_id?: string
+  name: string
+  slug: string
+  shortDescription?: string
+  short_description?: string
+  description?: string
+  icon?: string
+  imageUrl?: string
+  image_url?: string
+  benefits?: string[]
+  relatedProductIds?: string[]
+  related_product_ids?: string[]
+  isActive?: boolean
+  is_active?: boolean
+  sortOrder?: number
+  sort_order?: number
+  createdAt?: string
+  created_at?: string
+}
+
+export type ProjectCategory = 'residential' | 'commercial' | 'hotels' | 'schools' | 'offices' | 'restaurants'
+
+export interface Project {
+  id: string
+  storeId?: string
+  store_id?: string
+  title: string
+  slug: string
+  category: ProjectCategory
+  location?: string
+  description?: string
+  servicesProvided?: string[]
+  services_provided?: string[]
+  beforeImages?: string[]
+  before_images?: string[]
+  afterImages?: string[]
+  after_images?: string[]
+  images?: string[]
+  isFeatured?: boolean
+  is_featured?: boolean
+  sortOrder?: number
+  sort_order?: number
+  createdAt?: string
+  created_at?: string
+}
+
+export type GalleryFilterCategory = 'metal' | 'aluminum_glass' | 'wood' | 'decorative_concrete' | 'interior' | 'exterior'
+
+export interface GalleryItem {
+  id: string
+  storeId?: string
+  store_id?: string
+  title?: string
+  mediaType?: 'image' | 'video'
+  media_type?: 'image' | 'video'
+  mediaUrl?: string
+  media_url?: string
+  thumbnailUrl?: string
+  thumbnail_url?: string
+  filterCategory: GalleryFilterCategory
+  filter_category?: GalleryFilterCategory
+  sortOrder?: number
+  sort_order?: number
+  createdAt?: string
+  created_at?: string
+}
+
+export interface BlogPost {
+  id: string
+  storeId?: string
+  store_id?: string
+  title: string
+  slug: string
+  excerpt?: string
+  content: string
+  coverImage?: string
+  cover_image?: string
+  category?: string
+  author?: string
+  isPublished?: boolean
+  is_published?: boolean
+  publishedAt?: string | null
+  published_at?: string | null
+  createdAt?: string
+  created_at?: string
+  updatedAt?: string
+  updated_at?: string
+}
+
+export type EmploymentType = 'full_time' | 'part_time' | 'contract' | 'internship'
+
+export interface JobPosting {
+  id: string
+  storeId?: string
+  store_id?: string
+  title: string
+  slug: string
+  department?: string
+  location?: string
+  employmentType?: EmploymentType
+  employment_type?: EmploymentType
+  description?: string
+  requirements?: string
+  isInternship?: boolean
+  is_internship?: boolean
+  isActive?: boolean
+  is_active?: boolean
+  createdAt?: string
+  created_at?: string
+}
+
+export type JobApplicationStatus = 'new' | 'reviewed' | 'shortlisted' | 'rejected' | 'hired'
+
+export interface JobApplication {
+  id: string
+  jobPostingId?: string
+  job_posting_id?: string
+  storeId?: string
+  store_id?: string
+  applicantName?: string
+  applicant_name?: string
+  email: string
+  phone?: string
+  resumeUrl?: string
+  resume_url?: string
+  coverNote?: string
+  cover_note?: string
+  status?: JobApplicationStatus
+  createdAt?: string
+  created_at?: string
+  // Joined
+  jobTitle?: string
+  job_title?: string
+}
+
+export interface Testimonial {
+  id: string
+  storeId?: string
+  store_id?: string
+  customerName?: string
+  customer_name?: string
+  customerTitle?: string
+  customer_title?: string
+  quote: string
+  rating?: number
+  photoUrl?: string
+  photo_url?: string
+  isFeatured?: boolean
+  is_featured?: boolean
+  sortOrder?: number
+  sort_order?: number
+  createdAt?: string
+  created_at?: string
+}
+
+export type QuoteRequestSourceType = 'product' | 'service' | 'project' | 'contact_form' | 'general'
+export type QuoteRequestStatus = 'new' | 'contacted' | 'quoted' | 'won' | 'lost'
+
+export interface QuoteRequest {
+  id: string
+  storeId?: string
+  store_id?: string
+  name: string
+  email?: string
+  phone: string
+  message?: string
+  sourceType?: QuoteRequestSourceType
+  source_type?: QuoteRequestSourceType
+  sourceId?: string | null
+  source_id?: string | null
+  sourceName?: string
+  source_name?: string
+  status?: QuoteRequestStatus
+  adminNote?: string
+  admin_note?: string
+  createdAt?: string
+  created_at?: string
 }
 
 export interface ReelProduct {

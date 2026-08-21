@@ -4,8 +4,9 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Duka by Awarizon", template: "%s | Duka" },
-  description: "Discover and shop from verified Nigerian vendors — Duka by Awarizon",
+  title: { default: "Forge & Form", template: "%s | Forge & Form" },
+  description:
+    "Forge & Form — integrated fabrication and interior solutions. Metal fabrication, aluminium & glass, woodworking, decorative concrete, and complete interior fit-outs.",
 };
 
 export default function RootLayout({
