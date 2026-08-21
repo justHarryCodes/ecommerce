@@ -1,6 +1,7 @@
 import { getCompany } from "@/lib/auth";
 import { WHY_CHOOSE_US } from "@/lib/site-content";
 import QuoteRequestButton from "@/components/storefront/QuoteRequestButton";
+import PageHero from "@/components/storefront/PageHero";
 
 export const metadata = { title: "About Us" };
 
@@ -9,18 +10,17 @@ export default async function AboutPage() {
   const companyName = company?.name ?? "Forge & Form";
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-      <div className="max-w-2xl mb-12">
-        <h1 className="text-3xl sm:text-4xl font-black" style={{ color: "var(--text-primary)" }}>
-          About {companyName}
-        </h1>
-        {company?.description && (
-          <p className="mt-4 text-base leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            {company.description}
-          </p>
-        )}
-      </div>
+    <div>
+      <PageHero
+        eyebrow="About Us"
+        title={`The team behind ${companyName}`}
+        subtitle={
+          company?.description ??
+          "Integrated fabrication and interior solutions — metalwork, aluminium & glass, woodworking, decorative concrete, and complete interior fit-outs."
+        }
+      />
 
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
       {(company?.vision || company?.mission) && (
         <div className="grid sm:grid-cols-2 gap-6 mb-14">
           {company?.vision && (
@@ -68,6 +68,7 @@ export default async function AboutPage() {
           <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>Tell us what you need — we'll get back to you with a quote.</p>
         </div>
         <QuoteRequestButton sourceType="general" size="lg" />
+      </div>
       </div>
     </div>
   );

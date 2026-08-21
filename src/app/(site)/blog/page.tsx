@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/utils";
 import { clCard } from "@/lib/cloudinary";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
+import PageHero from "@/components/storefront/PageHero";
 import type { BlogPost } from "@/types";
 
 export const metadata = { title: "Blog" };
@@ -20,16 +21,15 @@ export default async function BlogPage() {
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-10 max-w-2xl">
-        <h1 className="text-3xl sm:text-4xl font-black" style={{ color: "var(--text-primary)" }}>
-          Blog
-        </h1>
-        <p className="mt-2 text-base" style={{ color: "var(--text-secondary)" }}>
-          Tips, trends, and stories from our workshop and job sites.
-        </p>
-      </div>
+    <div>
+      <PageHero
+        eyebrow="Blog"
+        title="Tips, Trends & Stories"
+        subtitle="Notes from our workshop and job sites — home improvement tips, materials, and interior trends."
+        stats={[{ label: "Articles", value: posts.length }]}
+      />
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {posts.length === 0 ? (
         <EmptyState icon={Newspaper} title="No posts yet" description="Please check back shortly." />
       ) : (
@@ -78,6 +78,7 @@ export default async function BlogPage() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

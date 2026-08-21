@@ -1,6 +1,7 @@
 import { getCompany } from "@/lib/auth";
 import { query } from "@/lib/db";
 import GalleryGrid from "@/components/storefront/GalleryGrid";
+import PageHero from "@/components/storefront/PageHero";
 import type { GalleryItem } from "@/types";
 
 export const metadata = { title: "Gallery" };
@@ -15,17 +16,17 @@ export default async function GalleryPage() {
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8 max-w-2xl">
-        <h1 className="text-3xl sm:text-4xl font-black" style={{ color: "var(--text-primary)" }}>
-          Gallery
-        </h1>
-        <p className="mt-2 text-base" style={{ color: "var(--text-secondary)" }}>
-          A closer look at our work — metalwork, aluminium & glass, woodworking, decorative concrete, and interiors.
-        </p>
-      </div>
+    <div>
+      <PageHero
+        eyebrow="Gallery"
+        title="Photos & Videos"
+        subtitle="A closer look at our work — metalwork, aluminium & glass, woodworking, decorative concrete, and interiors."
+        stats={[{ label: "Photos & videos", value: items.length }]}
+      />
 
-      <GalleryGrid items={items} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <GalleryGrid items={items} />
+      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import { getCompany } from "@/lib/auth";
 import { waLink } from "@/lib/utils";
 import ContactForm from "@/components/storefront/ContactForm";
+import PageHero from "@/components/storefront/PageHero";
 
 export const metadata = { title: "Contact Us" };
 
@@ -24,16 +25,14 @@ export default async function ContactPage() {
   const mapEmbedUrl = company?.mapEmbedUrl ?? company?.map_embed_url;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-      <div className="max-w-2xl mb-12">
-        <h1 className="text-3xl sm:text-4xl font-black" style={{ color: "var(--text-primary)" }}>
-          Get in Touch
-        </h1>
-        <p className="mt-2 text-base" style={{ color: "var(--text-secondary)" }}>
-          Have a project in mind? Send us a message and our team will get back to you shortly.
-        </p>
-      </div>
+    <div>
+      <PageHero
+        eyebrow="Contact"
+        title="Get in Touch"
+        subtitle="Have a project in mind? Send us a message and our team will get back to you shortly."
+      />
 
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
       <div className="grid lg:grid-cols-2 gap-12">
         <div>
           <div className="space-y-5 mb-10">
@@ -118,6 +117,7 @@ export default async function ContactPage() {
           <h2 className="text-lg font-bold mb-5" style={{ color: "var(--text-primary)" }}>Send us a message</h2>
           <ContactForm />
         </div>
+      </div>
       </div>
     </div>
   );

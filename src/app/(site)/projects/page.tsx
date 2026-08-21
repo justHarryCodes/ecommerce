@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { clCard } from "@/lib/cloudinary";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
+import PageHero from "@/components/storefront/PageHero";
 import type { Project, ProjectCategory } from "@/types";
 
 export const metadata = { title: "Projects" };
@@ -38,16 +39,15 @@ export default async function ProjectsPage({
   const projects = company ? await query<Project>(sql, params) : [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8 max-w-2xl">
-        <h1 className="text-3xl sm:text-4xl font-black" style={{ color: "var(--text-primary)" }}>
-          Our Projects
-        </h1>
-        <p className="mt-2 text-base" style={{ color: "var(--text-secondary)" }}>
-          A selection of completed work across residential, commercial, and hospitality spaces.
-        </p>
-      </div>
+    <div>
+      <PageHero
+        eyebrow="Our Work"
+        title="Completed Projects"
+        subtitle="A selection of completed work across residential, commercial, and hospitality spaces."
+        stats={[{ label: "Projects completed", value: projects.length }]}
+      />
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-wrap gap-2 mb-8">
         <Link
           href="/projects"
@@ -117,6 +117,7 @@ export default async function ProjectsPage({
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

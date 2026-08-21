@@ -5,6 +5,7 @@ import { query } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import ProductCard from "@/components/storefront/ProductCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import PageHero from "@/components/storefront/PageHero";
 import type { Product, Category } from "@/types";
 
 export const metadata = { title: "Products" };
@@ -95,18 +96,18 @@ export default async function ProductsPage({
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl sm:text-4xl font-black" style={{ color: "var(--text-primary)" }}>
-          Shop the Catalog
-        </h1>
-        <p className="mt-2 text-base max-w-2xl" style={{ color: "var(--text-secondary)" }}>
-          Standard pieces ship straight from stock — everything else is built to your exact
-          specifications. Add stock items to your cart, or request a quote for custom work.
-        </p>
-      </div>
+    <div>
+      <PageHero
+        eyebrow="Catalog"
+        title="Shop the Catalog"
+        subtitle="Standard pieces ship straight from stock — everything else is built to your exact specifications. Add stock items to your cart, or request a quote for custom work."
+        stats={[
+          { label: "Products", value: products.length },
+          { label: "Categories", value: topCategories.length },
+        ]}
+      />
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="grid lg:grid-cols-[240px_1fr] gap-8">
         {/* ── Sidebar (desktop) ── */}
         <aside className="hidden lg:block">
@@ -263,6 +264,7 @@ export default async function ProductsPage({
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

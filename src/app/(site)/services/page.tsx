@@ -3,6 +3,7 @@ import { Wrench } from "lucide-react";
 import { getCompany } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { EmptyState } from "@/components/ui/EmptyState";
+import PageHero from "@/components/storefront/PageHero";
 import type { Service } from "@/types";
 
 export const metadata = { title: "Services" };
@@ -17,16 +18,15 @@ export default async function ServicesPage() {
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-10 max-w-2xl">
-        <h1 className="text-3xl sm:text-4xl font-black" style={{ color: "var(--text-primary)" }}>
-          Our Services
-        </h1>
-        <p className="mt-2 text-base" style={{ color: "var(--text-secondary)" }}>
-          From metal fabrication to complete interior fit-outs — everything under one roof, from consultation to installation.
-        </p>
-      </div>
+    <div>
+      <PageHero
+        eyebrow="What We Do"
+        title="Our Services"
+        subtitle="From metal fabrication to complete interior fit-outs — everything under one roof, from consultation to installation."
+        stats={[{ label: "Services offered", value: services.length }]}
+      />
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {services.length === 0 ? (
         <EmptyState icon={Wrench} title="No services listed yet" description="Please check back shortly." />
       ) : (
@@ -62,6 +62,7 @@ export default async function ServicesPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
