@@ -20,6 +20,7 @@ import {
   Quote,
   MessageSquare,
   Layout,
+  ShoppingBag,
 } from "lucide-react";
 import { auth } from "@/lib/firebase-client";
 import { signOut } from "firebase/auth";
@@ -29,6 +30,7 @@ const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/quote-requests", label: "Leads", icon: MessageSquare },
   { href: "/dashboard/products", label: "Products", icon: Package },
+  { href: "/dashboard/orders", label: "Orders", icon: ShoppingBag },
   { href: "/dashboard/categories", label: "Categories", icon: FolderTree },
   { href: "/dashboard/services", label: "Services", icon: Wrench },
   { href: "/dashboard/projects", label: "Projects", icon: Building2 },

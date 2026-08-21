@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ShoppingCart } from "lucide-react";
 import { clLogo } from "@/lib/cloudinary";
+import { useCart } from "./CartProvider";
+import CartDrawer from "./CartDrawer";
 import type { Store } from "@/types";
 
 const NAV_LINKS = [
@@ -22,9 +24,32 @@ interface Props {
   company: Store | null;
 }
 
+function CartButton({ onClick, className }: { onClick: () => void; className?: string }) {
+  const { totalItems } = useCart();
+  return (
+    <button
+      onClick={onClick}
+      aria-label={`Cart, ${totalItems} item${totalItems !== 1 ? "s" : ""}`}
+      className={`relative p-2 rounded-lg transition-colors ${className ?? ""}`}
+      style={{ color: "var(--text-primary)" }}
+    >
+      <ShoppingCart className="w-5 h-5" />
+      {totalItems > 0 && (
+        <span
+          className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center"
+          style={{ background: "var(--accent)" }}
+        >
+          {totalItems > 99 ? "99+" : totalItems}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function SiteNav({ company }: Props) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const companyName = company?.name ?? "Forge & Form";
   const logoUrl = company?.logoUrl ?? company?.logo_url ?? null;
@@ -84,18 +109,20 @@ export default function SiteNav({ company }: Props) {
             </div>
 
             {/* Desktop CTA */}
-            <div className="hidden lg:flex items-center">
+            <div className="hidden lg:flex items-center gap-1">
+              <CartButton onClick={() => setCartOpen(true)} className="hover:bg-black/5 dark:hover:bg-white/5" />
               <Link
                 href="/contact"
-                className="text-sm font-semibold px-4 py-2 rounded-lg text-white transition-opacity hover:opacity-90"
+                className="ml-2 text-sm font-semibold px-4 py-2 rounded-lg text-white transition-opacity hover:opacity-90"
                 style={{ background: "var(--accent)" }}
               >
                 Get a Free Quote
               </Link>
             </div>
 
-            {/* Mobile: hamburger */}
-            <div className="flex lg:hidden items-center gap-2">
+            {/* Mobile: cart + hamburger */}
+            <div className="flex lg:hidden items-center gap-1">
+              <CartButton onClick={() => setCartOpen(true)} />
               <button
                 onClick={() => setOpen((v) => !v)}
                 aria-label={open ? "Close menu" : "Open menu"}
@@ -147,6 +174,8 @@ export default function SiteNav({ company }: Props) {
           </Link>
         </div>
       </div>
+
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} company={company} />
     </>
   );
 }

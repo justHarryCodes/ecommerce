@@ -11,6 +11,7 @@ import {
   ArrowRight,
   ExternalLink,
   Phone,
+  ShoppingBag,
 } from "lucide-react";
 import type { QuoteRequest } from "@/types";
 import { Tip } from "@/components/dashboard/Tip";
@@ -25,13 +26,17 @@ async function getDashboardStats(storeId: string) {
       total_products: string;
       total_projects: string;
       published_posts: string;
+      total_orders: string;
+      pending_orders: string;
     }>(
       `SELECT
          (SELECT COUNT(*) FROM quote_requests WHERE store_id = $1) AS total_leads,
          (SELECT COUNT(*) FROM quote_requests WHERE store_id = $1 AND status = 'new') AS new_leads,
          (SELECT COUNT(*) FROM products WHERE store_id = $1 AND is_active = true) AS total_products,
          (SELECT COUNT(*) FROM projects WHERE store_id = $1) AS total_projects,
-         (SELECT COUNT(*) FROM blog_posts WHERE store_id = $1 AND is_published = true) AS published_posts
+         (SELECT COUNT(*) FROM blog_posts WHERE store_id = $1 AND is_published = true) AS published_posts,
+         (SELECT COUNT(*) FROM orders WHERE store_id = $1) AS total_orders,
+         (SELECT COUNT(*) FROM orders WHERE store_id = $1 AND order_status = 'pending') AS pending_orders
       `,
       [storeId]
     ),
@@ -48,6 +53,8 @@ async function getDashboardStats(storeId: string) {
       total_products: parseInt(counts?.total_products ?? "0"),
       total_projects: parseInt(counts?.total_projects ?? "0"),
       published_posts: parseInt(counts?.published_posts ?? "0"),
+      total_orders: parseInt(counts?.total_orders ?? "0"),
+      pending_orders: parseInt(counts?.pending_orders ?? "0"),
     },
     recentLeads,
   };
@@ -83,6 +90,13 @@ export default async function DashboardPage() {
       value: stats.published_posts,
       icon: Newspaper,
       color: "bg-amber-50 dark:bg-amber-950/30 text-amber-600",
+    },
+    {
+      label: "Orders",
+      value: stats.total_orders,
+      icon: ShoppingBag,
+      color: "bg-rose-50 dark:bg-rose-950/30 text-rose-600",
+      sub: stats.pending_orders > 0 ? `${stats.pending_orders} pending` : undefined,
     },
   ];
 
@@ -135,7 +149,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -166,7 +180,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { href: "/dashboard/products/new", label: "Add product", emoji: "📦" },
-          { href: "/dashboard/projects/new", label: "Add project", emoji: "🏗️" },
+          { href: "/dashboard/orders", label: "View orders", emoji: "🛒" },
           { href: "/dashboard/quote-requests", label: "View leads", emoji: "💬" },
         ].map((action) => (
           <Link

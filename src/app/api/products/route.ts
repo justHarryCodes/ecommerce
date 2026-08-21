@@ -20,6 +20,7 @@ const Schema = z.object({
   imageUrl:         z.string().optional(),
   isActive:         z.boolean().default(true),
   isFeatured:       z.boolean().default(false),
+  isPurchasable:    z.boolean().default(false),
   sizeOptions:      z.array(z.string()).default([]),
   materialOptions:  z.array(z.string()).default([]),
   colorOptions:     z.array(z.string()).default([]),
@@ -86,13 +87,13 @@ export async function POST(req: NextRequest) {
     INSERT INTO products (
       store_id, category_id, subcategory_id, name, slug, description, short_description,
       price, price_note, compare_price, stock_quantity, image_url, images, is_active, is_featured,
-      size_options, material_options, color_options
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *
+      is_purchasable, size_options, material_options, color_options
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *
   `, [
     store.id, categoryId, d.subcategoryId || null, d.name, slug,
     d.description || null, d.shortDescription || null, d.price ?? null, d.priceNote || null, d.comparePrice || null,
     d.stockQuantity, imageUrl, d.images, d.isActive, d.isFeatured,
-    d.sizeOptions, d.materialOptions, d.colorOptions
+    d.isPurchasable, d.sizeOptions, d.materialOptions, d.colorOptions
   ])
 
   await cacheDelPattern(`products:${store.id}*`)

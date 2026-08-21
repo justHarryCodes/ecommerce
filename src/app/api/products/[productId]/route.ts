@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const { productId } = await params
   const body = await req.json()
   const allowed = ['name', 'description', 'short_description', 'price', 'price_note', 'compare_price',
-    'stock_quantity', 'category_id', 'subcategory_id', 'image_url', 'images', 'is_active', 'is_featured', 'sort_order',
+    'stock_quantity', 'category_id', 'subcategory_id', 'image_url', 'images', 'is_active', 'is_featured', 'is_purchasable', 'sort_order',
     'size_options', 'material_options', 'color_options']
   const sets: string[] = []; const vals: unknown[] = []; let i = 1
 

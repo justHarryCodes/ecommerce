@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Mail,
   KeyRound,
+  CreditCard,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -37,6 +38,8 @@ export default function SettingsClient({ store: initial }: Props) {
     ...initial,
     businessHours: (initial.businessHours ?? initial.business_hours ?? {}) as BusinessHours,
     socialLinks: (initial.socialLinks ?? initial.social_links ?? {}) as SocialLinks,
+    paymentPreference:
+      initial.paymentPreference ?? initial.payment_preference ?? "paystack",
   }));
   const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -132,6 +135,11 @@ export default function SettingsClient({ store: initial }: Props) {
           socialLinks: store.socialLinks,
           vision: store.vision,
           mission: store.mission,
+          paymentPreference: store.paymentPreference,
+          bankName: store.bankName ?? store.bank_name,
+          bankAccountNumber: store.bankAccountNumber ?? store.bank_account_number,
+          bankAccountName: store.bankAccountName ?? store.bank_account_name,
+          paystackPublicKey: store.paystackPublicKey ?? store.paystack_public_key,
         }),
       });
       const data = await res.json();
@@ -375,6 +383,100 @@ export default function SettingsClient({ store: initial }: Props) {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Payment settings — used at checkout for products marked "Add to Cart" */}
+      <section className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-6 space-y-5">
+        <h2 className="font-bold text-surface-900 dark:text-white flex items-center gap-2">
+          <CreditCard className="w-4 h-4" />
+          Payment settings
+        </h2>
+        <p className="text-xs text-surface-400 -mt-3">
+          Only used for products marked &ldquo;Add to Cart&rdquo; in the product editor — quote-only products don&apos;t need this.
+        </p>
+
+        <div>
+          <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+            Accepted payment methods
+          </label>
+          <div className="grid sm:grid-cols-3 gap-2">
+            {(["paystack", "bank_transfer", "both"] as const).map((method) => (
+              <button
+                key={method}
+                type="button"
+                onClick={() => change("paymentPreference", method)}
+                className={`py-2.5 px-3 rounded-xl text-sm font-medium border-2 transition-all text-left ${
+                  store.paymentPreference === method
+                    ? "border-accent-400 bg-accent-50 dark:bg-accent-950 text-accent-700 dark:text-accent-300"
+                    : "border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800"
+                }`}
+              >
+                {method === "paystack"
+                  ? "Paystack only"
+                  : method === "bank_transfer"
+                    ? "Bank transfer only"
+                    : "Both methods"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {(store.paymentPreference === "bank_transfer" || store.paymentPreference === "both") && (
+          <div className="grid gap-4">
+            <div>
+              <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                Bank name
+              </label>
+              <input
+                value={store.bankName ?? store.bank_name ?? ""}
+                onChange={(e) => change("bankName", e.target.value)}
+                placeholder="e.g. Access Bank"
+                className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
+              />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                  Account number
+                </label>
+                <input
+                  value={store.bankAccountNumber ?? store.bank_account_number ?? ""}
+                  onChange={(e) => change("bankAccountNumber", e.target.value)}
+                  placeholder="0123456789"
+                  className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                  Account name
+                </label>
+                <input
+                  value={store.bankAccountName ?? store.bank_account_name ?? ""}
+                  onChange={(e) => change("bankAccountName", e.target.value)}
+                  placeholder="Company Ltd"
+                  className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(store.paymentPreference === "paystack" || store.paymentPreference === "both") && (
+          <div>
+            <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+              Paystack public key
+            </label>
+            <input
+              value={store.paystackPublicKey ?? store.paystack_public_key ?? ""}
+              onChange={(e) => change("paystackPublicKey", e.target.value)}
+              placeholder="pk_live_..."
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-transparent text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent-400 text-sm font-mono"
+            />
+            <p className="text-xs text-surface-400 mt-1">
+              Found in your Paystack dashboard under Settings → API Keys. The secret key lives server-side in the environment, not here.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Vision & Mission */}

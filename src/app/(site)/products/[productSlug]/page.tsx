@@ -7,6 +7,7 @@ import { formatCurrency, waLink } from "@/lib/utils";
 import ProductGallery from "@/components/storefront/ProductGallery";
 import ProductCard from "@/components/storefront/ProductCard";
 import QuoteRequestButton from "@/components/storefront/QuoteRequestButton";
+import AddToCartPanel from "@/components/storefront/AddToCartPanel";
 import type { Product } from "@/types";
 
 export async function generateMetadata({ params }: { params: Promise<{ productSlug: string }> }) {
@@ -48,7 +49,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const materialOptions = product.material_options ?? product.materialOptions ?? [];
   const colorOptions = product.color_options ?? product.colorOptions ?? [];
   const whatsapp = company.whatsapp;
-  const waMessage = `Hi, I'm interested in ${product.name} — can you send me a quote?`;
+  const purchasable = product.isPurchasable ?? product.is_purchasable ?? false;
+  const waMessage = purchasable
+    ? `Hi, I'd like to order ${product.name}.`
+    : `Hi, I'm interested in ${product.name} — can you send me a quote?`;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -80,9 +84,17 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             {product.name}
           </h1>
 
-          <p className="mt-3 text-xl font-black" style={{ color: "var(--accent)" }}>
-            {price != null ? formatCurrency(price) : priceNote ?? "Request a quote"}
-          </p>
+          <div className="mt-3 flex items-center gap-3">
+            <p className="text-xl font-black" style={{ color: "var(--accent)" }}>
+              {price != null ? formatCurrency(price) : priceNote ?? "Request a quote"}
+            </p>
+            <span
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide text-white"
+              style={{ background: purchasable ? "var(--accent)" : "var(--text-muted)" }}
+            >
+              {purchasable ? "In stock" : "Made to order"}
+            </span>
+          </div>
 
           {product.description && (
             <p className="mt-5 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
@@ -103,13 +115,17 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <QuoteRequestButton
-              sourceType="product"
-              sourceId={product.id}
-              sourceName={product.name}
-              size="lg"
-              className="w-full sm:w-auto"
-            />
+            {purchasable ? (
+              <AddToCartPanel product={product} />
+            ) : (
+              <QuoteRequestButton
+                sourceType="product"
+                sourceId={product.id}
+                sourceName={product.name}
+                size="lg"
+                className="w-full sm:w-auto"
+              />
+            )}
             {whatsapp && (
               <a
                 href={waLink(whatsapp, waMessage)}

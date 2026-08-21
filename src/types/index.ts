@@ -128,6 +128,10 @@ export interface Product {
   is_active?: boolean
   isFeatured?: boolean
   is_featured?: boolean
+  // Purchase mode — true: fixed-price, "Add to Cart" + real checkout.
+  // false (default): "Request a Quote" only, no price required.
+  isPurchasable?: boolean
+  is_purchasable?: boolean
   sortOrder?: number
   sort_order?: number
   // Catalog options

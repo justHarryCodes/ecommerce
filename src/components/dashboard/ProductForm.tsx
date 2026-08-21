@@ -24,6 +24,7 @@ const schema = z.object({
   categoryId: z.string().optional(),
   subcategoryId: z.string().optional(),
   isActive: z.boolean().default(true).optional(),
+  isPurchasable: z.boolean().default(false).optional(),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -66,6 +67,7 @@ export default function ProductForm({ categories, product }: Props) {
       categoryId: product?.category_id ?? "",
       subcategoryId: product?.subcategory_id ?? "",
       isActive: product?.is_active ?? true,
+      isPurchasable: product?.is_purchasable ?? false,
     },
   });
 
@@ -86,6 +88,10 @@ export default function ProductForm({ categories, product }: Props) {
   }
 
   async function onSubmit(data: FormData) {
+    if (data.isPurchasable && !data.price) {
+      toast.error("Set a price before marking this product as Add to Cart");
+      return;
+    }
     setLoading(true);
     try {
       const isEdit = !!product;
@@ -268,6 +274,21 @@ export default function ProductForm({ categories, product }: Props) {
             {subCats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
+      </div>
+
+      {/* Purchase mode */}
+      <div className="rounded-xl border border-surface-200 dark:border-surface-700 p-4 space-y-1">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input {...register("isPurchasable")} type="checkbox" id="isPurchasable"
+            className="w-4 h-4 rounded accent-amber-400" />
+          <span className="text-sm font-medium text-surface-900 dark:text-white">
+            Sellable at a fixed price (Add to Cart)
+          </span>
+        </label>
+        <p className="text-xs text-surface-400 pl-7">
+          On: shows an &ldquo;Add to Cart&rdquo; button and goes through checkout — requires a price above.
+          Off (default): shows &ldquo;Request a Quote&rdquo; only, for custom/made-to-order work.
+        </p>
       </div>
 
       {/* Active toggle */}

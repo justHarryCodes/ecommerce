@@ -27,6 +27,13 @@ export async function PATCH(
     phone: 'phone',
     whatsapp: 'whatsapp',
     return_policy: 'return_policy',
+    // Payment — needed for the cart/checkout path (some products are
+    // sellable at a fixed price alongside the quote-only catalog)
+    paymentPreference: 'payment_preference',
+    bankName: 'bank_name',
+    bankAccountNumber: 'bank_account_number',
+    bankAccountName: 'bank_account_name',
+    paystackPublicKey: 'paystack_public_key',
     // Company profile (single-company mode)
     email: 'email',
     address: 'address',
