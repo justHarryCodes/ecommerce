@@ -1,12 +1,28 @@
 import Link from "next/link";
-import { ArrowRight, MapPin, Star } from "lucide-react";
+import {
+  ArrowRight,
+  MapPin,
+  Star,
+  ChevronRight,
+  Info,
+  Wrench,
+  Briefcase,
+  Image as ImageIcon,
+  Newspaper,
+  UserPlus,
+  Hammer,
+  Layers,
+  TreePine,
+  Package,
+  type LucideIcon,
+} from "lucide-react";
 import { getCompany } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { clCard, clLogo } from "@/lib/cloudinary";
 import ProductCard from "@/components/storefront/ProductCard";
 import QuoteRequestButton from "@/components/storefront/QuoteRequestButton";
-import { PROCESS_STEPS, WHY_CHOOSE_US } from "@/lib/site-content";
-import type { Service, Product, Project, Testimonial, ProjectCategory } from "@/types";
+import { WHY_CHOOSE_US } from "@/lib/site-content";
+import type { Product, Project, Testimonial, ProjectCategory, Category } from "@/types";
 
 const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   residential: "Residential",
@@ -17,103 +33,152 @@ const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   restaurants: "Restaurants",
 };
 
+// Quick-nav tiles flanking the hero (desktop: 3 left + 3 right; mobile: one
+// horizontal-scroll row below the hero). Products/Contact are deliberately
+// left out — Products is the page's own focus just below, and Contact
+// already has the hero's CTA button.
+const NAV_TILES: { href: string; label: string; desc: string; icon: LucideIcon }[] = [
+  { href: "/about", label: "About Us", desc: "Our story & mission", icon: Info },
+  { href: "/services", label: "Services", desc: "What we do", icon: Wrench },
+  { href: "/projects", label: "Projects", desc: "Our portfolio", icon: Briefcase },
+  { href: "/gallery", label: "Gallery", desc: "Photos & videos", icon: ImageIcon },
+  { href: "/blog", label: "Blog", desc: "Tips & insights", icon: Newspaper },
+  { href: "/careers", label: "Careers", desc: "Join our team", icon: UserPlus },
+];
+const leftTiles = NAV_TILES.slice(0, 3);
+const rightTiles = NAV_TILES.slice(3, 6);
+
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  "metal-products": Hammer,
+  "aluminum-glass": Layers,
+  "wood-products": TreePine,
+  "decorative-concrete": Package,
+};
+
+function NavTile({ href, label, desc, icon: Icon, className = "" }: {
+  href: string; label: string; desc: string; icon: LucideIcon; className?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10 ${className}`}
+    >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: "var(--accent)" }}>
+        <Icon className="h-5 w-5 text-white" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-white truncate">{label}</p>
+        <p className="text-xs text-white/60 truncate">{desc}</p>
+      </div>
+      <ChevronRight className="h-4 w-4 text-white/40 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+    </Link>
+  );
+}
+
 export default async function HomePage() {
   const company = await getCompany();
   const companyName = company?.name ?? "Forge & Form";
   const logoUrl = company?.logoUrl ?? company?.logo_url ?? null;
 
-  const [services, featuredProducts, featuredProjects, testimonials] = company
+  const [categories, featuredProducts, featuredProjects, testimonials] = company
     ? await Promise.all([
-        query<Service>(`SELECT * FROM services WHERE store_id = $1 AND is_active = true ORDER BY sort_order, name LIMIT 6`, [company.id]),
+        query<Category>(`SELECT * FROM categories WHERE store_id = $1 AND parent_id IS NULL ORDER BY sort_order, name`, [company.id]),
         query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_featured = true ORDER BY sort_order LIMIT 8`, [company.id]),
-        query<Project>(`SELECT * FROM projects WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 4`, [company.id]),
+        query<Project>(`SELECT * FROM projects WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 3`, [company.id]),
         query<Testimonial>(`SELECT * FROM testimonials WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 6`, [company.id]),
       ])
     : [[], [], [], []];
 
+  const heroContent = (
+    <div className="text-center px-2">
+      {logoUrl && (
+        <img src={clLogo(logoUrl)} alt={companyName} className="h-12 w-auto mx-auto mb-6 object-contain" />
+      )}
+      <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+        Design. Fabricate. Build.
+      </h1>
+      <p className="mt-4 max-w-xl mx-auto text-sm sm:text-base text-white/70">
+        {company?.description ??
+          "Integrated fabrication and interior solutions — metalwork, aluminium & glass, woodworking, decorative concrete, and complete interior fit-outs, from consultation to installation."}
+      </p>
+      <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <QuoteRequestButton sourceType="general" label="Get a Free Quote" size="lg" />
+        <Link
+          href="/projects"
+          className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-base font-semibold border border-white/25 text-white transition-colors hover:bg-white/10"
+        >
+          View Our Projects <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    </div>
+  );
+
   return (
     <div>
-      {/* Hero */}
+      {/* Hero + quick-nav tiles */}
       <section className="relative overflow-hidden" style={{ background: "#1a1410" }}>
         <div
           className="absolute inset-0 opacity-20"
           style={{ background: "radial-gradient(circle at 20% 20%, var(--accent), transparent 55%)" }}
         />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 text-center">
-          {logoUrl && (
-            <img src={clLogo(logoUrl)} alt={companyName} className="h-14 w-auto mx-auto mb-8 object-contain" />
-          )}
-          <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight">
-            Design. Fabricate. Build.
-          </h1>
-          <p className="mt-5 max-w-xl mx-auto text-base sm:text-lg text-white/70">
-            {company?.description ??
-              "Integrated fabrication and interior solutions — metalwork, aluminium & glass, woodworking, decorative concrete, and complete interior fit-outs, from consultation to installation."}
-          </p>
-          <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <QuoteRequestButton sourceType="general" label="Get a Free Quote" size="lg" />
-            <Link
-              href="/projects"
-              className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-base font-semibold border border-white/25 text-white transition-colors hover:bg-white/10"
-            >
-              View Our Projects <ArrowRight className="h-4 w-4" />
-            </Link>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
+          {/* Desktop: 3-column layout — tiles flank the hero */}
+          <div className="hidden lg:grid grid-cols-[240px_1fr_240px] gap-8 items-center">
+            <div className="flex flex-col gap-4">
+              {leftTiles.map((t) => <NavTile key={t.href} {...t} />)}
+            </div>
+            {heroContent}
+            <div className="flex flex-col gap-4">
+              {rightTiles.map((t) => <NavTile key={t.href} {...t} />)}
+            </div>
+          </div>
+
+          {/* Mobile/tablet: hero on top, tiles as a horizontal-scroll row below */}
+          <div className="lg:hidden">
+            {heroContent}
+            <div className="mt-8 -mx-4 px-4 flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {NAV_TILES.map((t) => (
+                <NavTile key={t.href} {...t} className="w-40 shrink-0 snap-start" />
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* About teaser */}
-      {company?.description && (
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h2 className="text-2xl sm:text-3xl font-black mb-4" style={{ color: "var(--text-primary)" }}>
-            About {companyName}
+      {/* Shop by category */}
+      {categories.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <h2 className="text-xl sm:text-2xl font-black mb-6" style={{ color: "var(--text-primary)" }}>
+            Shop by Category
           </h2>
-          <p className="text-base leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            {company.description}
-          </p>
-          <Link href="/about" className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--accent)" }}>
-            Learn more <ArrowRight className="h-4 w-4" />
-          </Link>
-        </section>
-      )}
-
-      {/* Services */}
-      {services.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex items-end justify-between mb-8">
-            <h2 className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-primary)" }}>Our Services</h2>
-            <Link href="/services" className="text-sm font-semibold shrink-0" style={{ color: "var(--accent)" }}>View all →</Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {services.map((s) => (
-              <Link
-                key={s.id}
-                href={`/services/${s.slug}`}
-                className="group flex flex-col rounded-2xl border p-6 transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                style={{ borderColor: "var(--border)", background: "var(--bg)" }}
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl mb-4" style={{ background: "var(--accent-light)" }}>
-                  {s.icon ?? "🛠️"}
-                </div>
-                <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>{s.name}</h3>
-                {(s.short_description ?? s.shortDescription) && (
-                  <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                    {s.short_description ?? s.shortDescription}
-                  </p>
-                )}
-              </Link>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {categories.map((c) => {
+              const Icon = CATEGORY_ICONS[c.slug] ?? Package;
+              return (
+                <Link
+                  key={c.id}
+                  href={`/products?category=${c.slug}`}
+                  className="group flex flex-col items-center text-center gap-3 rounded-2xl border p-6 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  style={{ borderColor: "var(--border)", background: "var(--bg)" }}
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "var(--accent-light)" }}>
+                    <Icon className="h-6 w-6" style={{ color: "var(--accent-dark)" }} />
+                  </div>
+                  <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{c.name}</p>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
 
-      {/* Featured products */}
+      {/* Featured products — the centerpiece */}
       {featuredProducts.length > 0 && (
-        <section className="py-16" style={{ background: "var(--bg-secondary)" }}>
+        <section className="py-12" style={{ background: "var(--bg-secondary)" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-8">
-              <h2 className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-primary)" }}>Featured Products</h2>
-              <Link href="/products" className="text-sm font-semibold shrink-0" style={{ color: "var(--accent)" }}>View all →</Link>
+              <h2 className="text-xl sm:text-2xl font-black" style={{ color: "var(--text-primary)" }}>Featured Products</h2>
+              <Link href="/products" className="text-sm font-semibold shrink-0" style={{ color: "var(--accent)" }}>Shop all →</Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {featuredProducts.map((p) => (
@@ -124,55 +189,26 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Our Process */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-2xl sm:text-3xl font-black mb-10 text-center" style={{ color: "var(--text-primary)" }}>
-          Our Process
-        </h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {PROCESS_STEPS.map((step, i) => (
-            <div key={step.title} className="relative rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-white mb-4"
-                style={{ background: "var(--accent)" }}
-              >
-                {i + 1}
-              </div>
-              <step.icon className="h-6 w-6 mb-3" style={{ color: "var(--accent)" }} />
-              <h3 className="text-sm font-bold mb-1.5" style={{ color: "var(--text-primary)" }}>{step.title}</h3>
-              <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>{step.description}</p>
+      {/* Trust badges — compact, not a full showcase section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+          {WHY_CHOOSE_US.map(({ title, icon: Icon }) => (
+            <div key={title} className="flex items-center gap-2">
+              <Icon className="h-4 w-4" style={{ color: "var(--accent)" }} />
+              <span className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>{title}</span>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Why choose us */}
-      <section className="py-16" style={{ background: "var(--bg-secondary)" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-black mb-10 text-center" style={{ color: "var(--text-primary)" }}>
-            Why Choose Us
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
-            {WHY_CHOOSE_US.map(({ title, icon: Icon }) => (
-              <div key={title} className="flex flex-col items-center text-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "var(--accent-light)" }}>
-                  <Icon className="h-6 w-6" style={{ color: "var(--accent-dark)" }} />
-                </div>
-                <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{title}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured projects */}
+      {/* Recent projects — compact proof of work */}
       {featuredProjects.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex items-end justify-between mb-8">
-            <h2 className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-primary)" }}>Recent Projects</h2>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-end justify-between mb-6">
+            <h2 className="text-xl sm:text-2xl font-black" style={{ color: "var(--text-primary)" }}>Recent Projects</h2>
             <Link href="/projects" className="text-sm font-semibold shrink-0" style={{ color: "var(--accent)" }}>View all →</Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {featuredProjects.map((p) => {
               const image = p.images?.[0];
               return (
@@ -209,9 +245,9 @@ export default async function HomePage() {
 
       {/* Testimonials */}
       {testimonials.length > 0 && (
-        <section className="py-16" style={{ background: "var(--bg-secondary)" }}>
+        <section className="py-12" style={{ background: "var(--bg-secondary)" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-black mb-10 text-center" style={{ color: "var(--text-primary)" }}>
+            <h2 className="text-xl sm:text-2xl font-black mb-8 text-center" style={{ color: "var(--text-primary)" }}>
               What Our Clients Say
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
