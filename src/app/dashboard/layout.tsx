@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { verifySession, getUserStore } from "@/lib/auth";
+import { verifySession, getUserStore, getCompany, isAdminEmail } from "@/lib/auth";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import Topbar from "@/components/dashboard/Topbar";
 import DashboardBottomNav from "@/components/dashboard/DashboardBottomNav";
@@ -16,17 +16,30 @@ export default async function DashboardLayout({
 
   const store = await getUserStore(user.firebaseUid);
   if (!store) {
-    // Should only happen before migrations/002_company_pivot.sql has been
-    // run against the target database — the company row is seeded there.
+    // Two distinct causes share this null: the company row hasn't been
+    // seeded yet (migration not run), or this is a logged-in user who
+    // just isn't on the ADMIN_EMAILS allow-list (e.g. a customer).
+    const companyExists = await getCompany();
+    const notAuthorized = companyExists && !isAdminEmail(user.email);
+
     return (
       <div className="min-h-screen flex items-center justify-center p-8 bg-zinc-50 dark:bg-zinc-950">
         <div className="max-w-md text-center">
           <h1 className="text-lg font-bold text-surface-900 dark:text-white mb-2">
-            Company profile not found
+            {notAuthorized ? "Not authorized" : "Company profile not found"}
           </h1>
           <p className="text-sm text-surface-500 dark:text-surface-400">
-            Run <code>migrations/002_company_pivot.sql</code> against this
-            database to seed the company profile before using the dashboard.
+            {notAuthorized ? (
+              <>
+                {user.email} doesn&apos;t have dashboard access. If this is a mistake, ask an
+                admin to add your email to <code>ADMIN_EMAILS</code>.
+              </>
+            ) : (
+              <>
+                Run <code>migrations/002_company_pivot.sql</code> against this
+                database to seed the company profile before using the dashboard.
+              </>
+            )}
           </p>
         </div>
       </div>

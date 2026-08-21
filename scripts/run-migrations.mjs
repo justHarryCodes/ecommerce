@@ -38,6 +38,7 @@ const MIGRATIONS = [
   { name: "mobile-push-tokens-migration.sql",   path: join(__dirname, "mobile-push-tokens-migration.sql") },
   { name: "002_company_pivot.sql",              path: join(__dirname, "../migrations/002_company_pivot.sql") },
   { name: "003_add_cart_checkout.sql",          path: join(__dirname, "../migrations/003_add_cart_checkout.sql") },
+  { name: "004_customer_accounts.sql",          path: join(__dirname, "../migrations/004_customer_accounts.sql") },
 ];
 
 async function run() {

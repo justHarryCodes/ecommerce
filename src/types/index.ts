@@ -316,6 +316,29 @@ export interface Testimonial {
 export type QuoteRequestSourceType = 'product' | 'service' | 'project' | 'contact_form' | 'general'
 export type QuoteRequestStatus = 'new' | 'contacted' | 'quoted' | 'won' | 'lost'
 
+export interface Customer {
+  id: string
+  storeId?: string
+  store_id?: string
+  firebaseUid?: string
+  firebase_uid?: string
+  name?: string
+  email?: string
+  phone?: string
+  address?: string
+  city?: string
+  state?: string
+  createdAt?: string
+  created_at?: string
+  updatedAt?: string
+  updated_at?: string
+  // Joined (dashboard customer list)
+  orderCount?: number
+  order_count?: number
+  totalSpent?: number
+  total_spent?: number
+}
+
 export interface QuoteRequest {
   id: string
   storeId?: string
@@ -387,6 +410,8 @@ export interface Order {
   id: string
   storeId?: string
   store_id?: string
+  customerId?: string | null
+  customer_id?: string | null
   orderNumber?: string
   order_number?: string
   customerName?: string

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -57,6 +57,28 @@ export default function CheckoutClient({
 
   const change = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  // If a customer is logged in, prefill from their saved profile — silently
+  // does nothing for guests (401 is expected and ignored).
+  useEffect(() => {
+    fetch("/api/account/profile")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        const c = json?.data;
+        if (!c) return;
+        setForm((f) => ({
+          ...f,
+          customerName: f.customerName || c.name || "",
+          customerEmail: f.customerEmail || c.email || "",
+          customerPhone: f.customerPhone || c.phone || "",
+          deliveryAddress: f.deliveryAddress || c.address || "",
+          deliveryCity: f.deliveryCity || c.city || "",
+          deliveryState: f.deliveryState || c.state || "",
+        }));
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (items.length === 0 && step !== "success") {
     return (

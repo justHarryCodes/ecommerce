@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { queryOne, withTransaction } from "@/lib/db";
-import { getCompany } from "@/lib/auth";
+import { queryOne, query, withTransaction } from "@/lib/db";
+import { getCompany, verifySession, getOrCreateCustomer } from "@/lib/auth";
 import { notifyStoreNewOrder } from "@/lib/push";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
@@ -45,6 +45,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
     }
 
+    // Optional — if the buyer is logged in, tag the order to their account
+    // so it shows up in /account order history. Guests (no session) still
+    // check out fine; customerId just stays null.
+    const session = await verifySession();
+    const customer = session ? await getOrCreateCustomer(session) : null;
+
     const body = await req.json();
     const parsed = OrderSchema.safeParse(body);
     if (!parsed.success) {
@@ -80,12 +86,12 @@ export async function POST(req: NextRequest) {
     const result = await withTransaction(async (client) => {
       const orderRows = await client.query(
         `INSERT INTO orders (
-          store_id, order_number, customer_name, customer_email, customer_phone,
+          store_id, customer_id, order_number, customer_name, customer_email, customer_phone,
           delivery_address, delivery_city, delivery_state, delivery_note,
           subtotal, total, payment_method
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id, order_number`,
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id, order_number`,
         [
-          company.id, orderNumber,
+          company.id, customer?.id ?? null, orderNumber,
           d.customerName,
           d.customerEmail || null,
           d.customerPhone,
@@ -131,6 +137,15 @@ export async function POST(req: NextRequest) {
       d.customerName,
       d.totalAmount
     ).catch(() => {});
+
+    // Save delivery details to the customer's profile so next checkout
+    // (and /account) has them prefilled — best-effort, never blocks the order.
+    if (customer) {
+      query(
+        `UPDATE customers SET name = $1, phone = $2, address = $3, city = $4, state = $5, updated_at = NOW() WHERE id = $6`,
+        [d.customerName, d.customerPhone, d.deliveryAddress, d.deliveryCity || null, d.deliveryState || null, customer.id]
+      ).catch(() => {});
+    }
 
     return NextResponse.json(
       { orderId: result.id, orderNumber: result.order_number },

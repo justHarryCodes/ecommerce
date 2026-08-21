@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { Menu, X, ShoppingCart, User } from "lucide-react";
 import { clLogo } from "@/lib/cloudinary";
 import { useCart } from "./CartProvider";
 import CartDrawer from "./CartDrawer";
@@ -110,6 +110,14 @@ export default function SiteNav({ company }: Props) {
 
             {/* Desktop CTA */}
             <div className="hidden lg:flex items-center gap-1">
+              <Link
+                href="/account"
+                aria-label="My account"
+                className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                style={{ color: "var(--text-primary)" }}
+              >
+                <User className="w-5 h-5" />
+              </Link>
               <CartButton onClick={() => setCartOpen(true)} className="hover:bg-black/5 dark:hover:bg-white/5" />
               <Link
                 href="/contact"
@@ -120,8 +128,16 @@ export default function SiteNav({ company }: Props) {
               </Link>
             </div>
 
-            {/* Mobile: cart + hamburger */}
+            {/* Mobile: account + cart + hamburger */}
             <div className="flex lg:hidden items-center gap-1">
+              <Link
+                href="/account"
+                aria-label="My account"
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: "var(--text-primary)" }}
+              >
+                <User className="w-5 h-5" />
+              </Link>
               <CartButton onClick={() => setCartOpen(true)} />
               <button
                 onClick={() => setOpen((v) => !v)}
