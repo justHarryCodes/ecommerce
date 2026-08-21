@@ -16,7 +16,15 @@ function createPool(): Pool {
     ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
     max: 20,
     idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 2_000,
+    // 2s was too tight against a remote (non-localhost) Postgres host —
+    // `next build`'s static generation spins up several parallel worker
+    // processes, each opening its own pool of up to `max` connections, and
+    // the resulting connection burst plus real network latency occasionally
+    // pushed past 2s, aborting the build with "Connection terminated due to
+    // connection timeout" on an essentially-arbitrary page. 10s gives normal
+    // connections plenty of headroom while still failing fast on a truly
+    // unreachable host.
+    connectionTimeoutMillis: 10_000,
   })
 }
 

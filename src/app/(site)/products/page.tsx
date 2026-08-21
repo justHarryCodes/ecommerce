@@ -17,7 +17,8 @@ async function getProducts(
   categorySlug?: string,
   subSlug?: string,
   mode?: string,
-  sort: Sort = "newest"
+  sort: Sort = "newest",
+  search?: string
 ) {
   let sql = `
     SELECT p.*, c.name AS category_name, c.slug AS category_slug
@@ -37,12 +38,25 @@ async function getProducts(
   if (mode === "buy") sql += ` AND p.is_purchasable = true`;
   if (mode === "quote") sql += ` AND p.is_purchasable = false`;
 
-  sql +=
-    sort === "price_asc"
-      ? " ORDER BY p.price ASC NULLS LAST, p.sort_order"
-      : sort === "price_desc"
-      ? " ORDER BY p.price DESC NULLS LAST, p.sort_order"
-      : " ORDER BY p.sort_order, p.created_at DESC";
+  // pg_trgm-indexed substring match (migrations/005_product_search.sql)
+  if (search) {
+    sql += ` AND (p.name ILIKE $${idx} OR p.short_description ILIKE $${idx})`;
+    params.push(`%${search}%`);
+    idx++;
+  }
+
+  if (search) {
+    // Rank by relevance to the search term first, then the usual sort
+    params.push(search);
+    sql += ` ORDER BY similarity(p.name, $${idx}) DESC, p.sort_order`;
+  } else {
+    sql +=
+      sort === "price_asc"
+        ? " ORDER BY p.price ASC NULLS LAST, p.sort_order"
+        : sort === "price_desc"
+        ? " ORDER BY p.price DESC NULLS LAST, p.sort_order"
+        : " ORDER BY p.sort_order, p.created_at DESC";
+  }
 
   return query<Product>(sql, params);
 }
@@ -56,9 +70,9 @@ const SORTS: { value: Sort; label: string }[] = [
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; sub?: string; mode?: string; sort?: string }>;
+  searchParams: Promise<{ category?: string; sub?: string; mode?: string; sort?: string; search?: string }>;
 }) {
-  const { category, sub, mode, sort } = await searchParams;
+  const { category, sub, mode, sort, search } = await searchParams;
   const activeSort: Sort = sort === "price_asc" || sort === "price_desc" ? sort : "newest";
   const company = await getCompany();
 
@@ -78,7 +92,7 @@ export default async function ProductsPage({
   const activeCategory = topCategories.find((c) => c.slug === category);
   const subcategories = activeCategory ? allCategories.filter((c) => c.parent_id === activeCategory.id) : [];
 
-  const products = await getProducts(company.id, category, sub, mode, activeSort);
+  const products = await getProducts(company.id, category, sub, mode, activeSort, search);
 
   // Preserve category/sub filters when switching mode/sort
   const baseParams = new URLSearchParams();
@@ -189,6 +203,17 @@ export default async function ProductsPage({
 
         {/* ── Main ── */}
         <div className="min-w-0">
+          {search && (
+            <div className="mb-5 flex items-center gap-2 flex-wrap">
+              <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                Search results for <strong style={{ color: "var(--text-primary)" }}>&ldquo;{search}&rdquo;</strong>
+              </span>
+              <Link href="/products" className="text-xs font-semibold underline" style={{ color: "var(--accent)" }}>
+                Clear
+              </Link>
+            </div>
+          )}
+
           {/* Mobile filter pills */}
           <div className="lg:hidden -mx-4 px-4 mb-4 flex gap-2 overflow-x-auto pb-1">
             <Link
