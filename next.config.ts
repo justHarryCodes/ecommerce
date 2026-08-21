@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Pin the workspace root to this directory explicitly. Without this,
+  // Next.js infers it by scanning upward for lockfiles — a stray
+  // package-lock.json anywhere above this folder (even an empty,
+  // unrelated one) makes it pick the wrong root, which silently breaks
+  // webpack's module/chunk resolution and shows up as intermittent
+  // "Cannot read properties of undefined (reading 'call')" crashes in
+  // dev. Setting this removes that failure mode for good, regardless
+  // of whatever else ends up next to this project on disk.
+  outputFileTracingRoot: path.join(__dirname),
+
   experimental: {
     serverActions: {
       allowedOrigins: [
