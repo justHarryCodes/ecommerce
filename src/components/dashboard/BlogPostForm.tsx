@@ -108,7 +108,7 @@ export default function BlogPostForm({ post }: Props) {
             className={inputClass}
             value={form.author}
             onChange={(e) => set("author", e.target.value)}
-            placeholder="e.g. Forge & Form Team"
+            placeholder="e.g. BINTED Team"
           />
         </div>
       </div>

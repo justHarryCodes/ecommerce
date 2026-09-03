@@ -7,7 +7,7 @@ export const metadata = { title: "About Us" };
 
 export default async function AboutPage() {
   const company = await getCompany();
-  const companyName = company?.name ?? "Forge & Form";
+  const companyName = company?.name ?? "BINTED";
 
   return (
     <div>

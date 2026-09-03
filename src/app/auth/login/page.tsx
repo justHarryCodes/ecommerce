@@ -13,7 +13,6 @@ import {
   EyeOff,
   Loader2,
   ShoppingBag,
-  Star,
   Zap,
   TrendingUp,
 } from "lucide-react";
@@ -32,10 +31,9 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 const features = [
-  { icon: ShoppingBag, text: "Launch your store in minutes" },
-  { icon: Zap, text: "Accept payments instantly" },
-  { icon: TrendingUp, text: "Track orders & analytics" },
-  { icon: Star, text: "Trusted by 1,000+ merchants" },
+  { icon: ShoppingBag, text: "Manage products, projects & the blog" },
+  { icon: Zap, text: "Track leads and orders in one place" },
+  { icon: TrendingUp, text: "See revenue, leads & top products" },
 ];
 
 const GoogleIcon = () => (
@@ -147,23 +145,17 @@ export default function LoginPage() {
 
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-3">
-            <img src="/logo.png" alt="Duka" className="h-10 w-auto object-contain" />
-            <div>
-              <span className="text-white text-xl font-extrabold tracking-tight block leading-none">Duka</span>
-              <span className="text-amber-400/70 text-xs font-medium tracking-wider">by Awarizon</span>
-            </div>
+            <img src="/logo.svg" alt="BINTED" className="h-10 w-auto object-contain" />
           </Link>
         </div>
 
         <div className="relative z-10 space-y-8">
           <div>
             <h2 className="text-4xl font-extrabold text-white leading-tight mb-4">
-              Your store,
-              <br />
-              <span className="text-amber-400">your rules.</span>
+              Staff dashboard
             </h2>
             <p className="text-zinc-400 text-lg leading-relaxed max-w-sm">
-              Everything you need to sell online — products, orders, payments, and more.
+              Sign in to manage BINTED&apos;s products, projects, leads, and content.
             </p>
           </div>
 
@@ -177,28 +169,10 @@ export default function LoginPage() {
               </li>
             ))}
           </ul>
-
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <p className="text-zinc-300 text-sm leading-relaxed mb-3">
-              &ldquo;Duka helped me launch my fashion store in a single afternoon. Sales started coming in the same day!&rdquo;
-            </p>
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center text-black text-xs font-bold">A</div>
-              <div>
-                <p className="text-white text-xs font-semibold">Amaka Osei</p>
-                <p className="text-zinc-500 text-xs">Fashion & Accessories</p>
-              </div>
-              <div className="ml-auto flex gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3 h-3 text-amber-400 fill-amber-400" />
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
 
         <p className="relative z-10 text-zinc-600 text-xs">
-          © {new Date().getFullYear()} Duka. All rights reserved.
+          © {new Date().getFullYear()} BINTED. All rights reserved.
         </p>
       </div>
 
@@ -207,8 +181,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="flex justify-center mb-8 lg:hidden">
             <Link href="/" className="inline-flex flex-col items-center gap-1">
-              <img src="/logo.png" alt="Duka" className="h-10 w-auto object-contain" />
-              <span className="text-xs text-zinc-400 font-medium tracking-wider">by Awarizon</span>
+              <img src="/logo.svg" alt="BINTED" className="h-10 w-auto object-contain" />
             </Link>
           </div>
 
@@ -302,7 +275,7 @@ export default function LoginPage() {
                   Signing in...
                 </>
               ) : (
-                "Sign in to Duka"
+                "Sign in to BINTED"
               )}
             </button>
           </form>

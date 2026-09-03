@@ -40,6 +40,7 @@ const MIGRATIONS = [
   { name: "003_add_cart_checkout.sql",          path: join(__dirname, "../migrations/003_add_cart_checkout.sql") },
   { name: "004_customer_accounts.sql",          path: join(__dirname, "../migrations/004_customer_accounts.sql") },
   { name: "005_product_search.sql",             path: join(__dirname, "../migrations/005_product_search.sql") },
+  { name: "006_rebrand_binted.sql",             path: join(__dirname, "../migrations/006_rebrand_binted.sql") },
 ];
 
 async function run() {

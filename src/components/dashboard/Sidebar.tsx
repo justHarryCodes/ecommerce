@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDashboardDrawer } from "@/lib/dashboard-drawer-store";
@@ -74,7 +73,7 @@ function SidebarContent({
     <div className="flex h-full flex-col">
       {/* Brand */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
-        <Image src="/logo.png" alt="Logo" width={96} height={32} style={{ height: 32, width: "auto" }} priority />
+        <img src="/logo.svg" alt="BINTED" style={{ height: 32, width: "auto" }} />
         {onClose && (
           <button
             onClick={onClose}

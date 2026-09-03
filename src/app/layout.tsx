@@ -4,9 +4,9 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Forge & Form", template: "%s | Forge & Form" },
+  title: { default: "BINTED", template: "%s | BINTED" },
   description:
-    "Forge & Form — integrated fabrication and interior solutions. Metal fabrication, aluminium & glass, woodworking, decorative concrete, and complete interior fit-outs.",
+    "BINTED — Believe Interior Design. Integrated fabrication and interior solutions: metal fabrication, aluminium & glass, woodworking, decorative concrete, and complete interior fit-outs.",
 };
 
 export default function RootLayout({

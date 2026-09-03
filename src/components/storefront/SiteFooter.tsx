@@ -30,7 +30,7 @@ const SOCIAL_ICONS: Record<string, typeof Facebook> = {
 };
 
 export default function SiteFooter({ company }: Props) {
-  const companyName = company?.name ?? "Forge & Form";
+  const companyName = company?.name ?? "BINTED";
   const description = company?.description;
   const phone = company?.phone;
   const email = company?.email;
