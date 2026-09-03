@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import { getCompany } from "@/lib/auth";
 import { query } from "@/lib/db";
-import { clCard, clLogo } from "@/lib/cloudinary";
+import { getHeroCollageImages } from "@/lib/hero-images";
+import { clCard } from "@/lib/cloudinary";
 import ProductCard from "@/components/storefront/ProductCard";
 import QuoteRequestButton from "@/components/storefront/QuoteRequestButton";
 import { WHY_CHOOSE_US } from "@/lib/site-content";
@@ -77,30 +78,27 @@ function NavTile({ href, label, desc, icon: Icon, className = "" }: {
 
 export default async function HomePage() {
   const company = await getCompany();
-  const companyName = company?.name ?? "Forge & Form";
-  const logoUrl = company?.logoUrl ?? company?.logo_url ?? null;
 
-  const [categories, featuredProducts, featuredProjects, testimonials] = company
+  const [categories, featuredProducts, featuredProjects, testimonials, heroImages] = company
     ? await Promise.all([
         query<Category>(`SELECT * FROM categories WHERE store_id = $1 AND parent_id IS NULL ORDER BY sort_order, name`, [company.id]),
         query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_featured = true ORDER BY sort_order LIMIT 8`, [company.id]),
         query<Project>(`SELECT * FROM projects WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 3`, [company.id]),
         query<Testimonial>(`SELECT * FROM testimonials WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 6`, [company.id]),
+        getHeroCollageImages(8),
       ])
-    : [[], [], [], []];
+    : [[], [], [], [], []];
 
+  const heroCollage = heroImages.length > 0
+    ? Array.from({ length: 8 }, (_, i) => heroImages[i % heroImages.length])
+    : [];
+
+  // Minimal, centered — just the headline and the two CTAs.
   const heroContent = (
     <div className="text-center px-2">
-      {logoUrl && (
-        <img src={clLogo(logoUrl)} alt={companyName} className="h-12 w-auto mx-auto mb-6 object-contain" />
-      )}
       <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
         Design. Fabricate. Build.
       </h1>
-      <p className="mt-4 max-w-xl mx-auto text-sm sm:text-base text-white/70">
-        {company?.description ??
-          "Integrated fabrication and interior solutions — metalwork, aluminium & glass, woodworking, decorative concrete, and complete interior fit-outs, from consultation to installation."}
-      </p>
       <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
         <QuoteRequestButton sourceType="general" label="Get a Free Quote" size="lg" />
         <Link
@@ -115,13 +113,22 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero + quick-nav tiles */}
-      <section className="relative overflow-hidden" style={{ background: "#1a1410" }}>
+      {/* Hero + quick-nav tiles — photo-collage background, minimal centered text */}
+      <section className="relative overflow-hidden min-h-[420px] sm:min-h-[480px] flex items-center" style={{ background: "#1a1410" }}>
+        {heroCollage.length > 0 && (
+          <div className="absolute inset-0 grid grid-cols-4 sm:grid-cols-8 gap-0.5">
+            {heroCollage.map((img, i) => (
+              <div key={i} className="relative overflow-hidden">
+                <img src={clCard(img)} alt="" className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        )}
         <div
-          className="absolute inset-0 opacity-20"
-          style={{ background: "radial-gradient(circle at 20% 20%, var(--accent), transparent 55%)" }}
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(180deg, rgba(20,15,10,0.72) 0%, rgba(20,15,10,0.82) 100%)" }}
         />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
           {/* Desktop: 3-column layout — tiles flank the hero */}
           <div className="hidden lg:grid grid-cols-[240px_1fr_240px] gap-8 items-center">
             <div className="flex flex-col gap-4">

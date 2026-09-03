@@ -26,7 +26,6 @@ export default async function BlogPage() {
         eyebrow="Blog"
         title="Tips, Trends & Stories"
         subtitle="Notes from our workshop and job sites — home improvement tips, materials, and interior trends."
-        stats={[{ label: "Articles", value: posts.length }]}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

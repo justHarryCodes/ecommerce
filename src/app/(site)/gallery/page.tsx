@@ -21,7 +21,6 @@ export default async function GalleryPage() {
         eyebrow="Gallery"
         title="Photos & Videos"
         subtitle="A closer look at our work — metalwork, aluminium & glass, woodworking, decorative concrete, and interiors."
-        stats={[{ label: "Photos & videos", value: items.length }]}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

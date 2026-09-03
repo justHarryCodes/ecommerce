@@ -44,7 +44,6 @@ export default async function ProjectsPage({
         eyebrow="Our Work"
         title="Completed Projects"
         subtitle="A selection of completed work across residential, commercial, and hospitality spaces."
-        stats={[{ label: "Projects completed", value: projects.length }]}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

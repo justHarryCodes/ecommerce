@@ -115,10 +115,6 @@ export default async function ProductsPage({
         eyebrow="Catalog"
         title="Shop the Catalog"
         subtitle="Standard pieces ship straight from stock — everything else is built to your exact specifications. Add stock items to your cart, or request a quote for custom work."
-        stats={[
-          { label: "Products", value: products.length },
-          { label: "Categories", value: topCategories.length },
-        ]}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

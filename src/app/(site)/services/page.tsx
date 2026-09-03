@@ -23,7 +23,6 @@ export default async function ServicesPage() {
         eyebrow="What We Do"
         title="Our Services"
         subtitle="From metal fabrication to complete interior fit-outs — everything under one roof, from consultation to installation."
-        stats={[{ label: "Services offered", value: services.length }]}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

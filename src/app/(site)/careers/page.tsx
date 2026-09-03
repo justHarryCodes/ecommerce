@@ -23,7 +23,6 @@ export default async function CareersPage() {
         eyebrow="Careers"
         title="Join Our Team"
         subtitle="See our open roles below and apply directly — we're always looking for skilled, motivated people."
-        stats={[{ label: "Open roles", value: jobs.length }]}
       />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
