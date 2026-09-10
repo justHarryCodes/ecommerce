@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of Use & Privacy Policy",
   description:
-    "DUKA Terms of Use and Privacy Policy — Powered by Awarizon. Review our platform rules, vendor responsibilities, and data practices.",
+    "DUKA Terms of Use and Privacy Policy — Powered by Build&Funish. Review our platform rules, vendor responsibilities, and data practices.",
 };
 
 const TOC = [
@@ -93,7 +93,7 @@ export default function TermsPage() {
             </span>
             <span className="font-extrabold text-zinc-900 dark:text-white">DUKA</span>
             <span className="text-zinc-400 text-sm font-medium hidden sm:block">
-              by Awarizon
+              by Build&Funish
             </span>
           </Link>
           <div className="flex items-center gap-3 text-sm">
@@ -147,17 +147,17 @@ export default function TermsPage() {
           {/* ── TERMS OF USE ─────────────────────────────────── */}
           <section>
             <H1 id="terms">Terms of Use</H1>
-            <p className="text-sm text-zinc-400 mt-1 mb-6">Powered by Awarizon · Effective Date: May 25, 2026</p>
+            <p className="text-sm text-zinc-400 mt-1 mb-6">Powered by Build&Funish · Effective Date: May 25, 2026</p>
 
             <P>
               Welcome to DUKA, a software-as-a-service (SaaS) platform powered by
-              Awarizon that enables vendors and businesses to create and manage
+              Build&Funish that enables vendors and businesses to create and manage
               online storefronts.
             </P>
             <P>
               By accessing or using DUKA through{" "}
-              <a href="https://awarizon.shop" className="text-amber-500 hover:underline">
-                https://awarizon.shop
+              <a href="https://buildandfunish.com" className="text-amber-500 hover:underline">
+                https://buildandfunish.com
               </a>
               , you agree to comply with and be bound by these Terms of Use. If
               you do not agree with these terms, you should not use the platform.
@@ -274,8 +274,8 @@ export default function TermsPage() {
             <H2 id="t7">7. Intellectual Property</H2>
             <P>
               All platform software, branding, systems, designs, and
-              infrastructure related to DUKA and Awarizon remain the intellectual
-              property of Awarizon.
+              infrastructure related to DUKA and Build&Funish remain the intellectual
+              property of Build&Funish.
             </P>
             <P>
               Users retain ownership of the content they upload, including:
@@ -307,7 +307,7 @@ export default function TermsPage() {
 
             <H2 id="t9">9. Limitation of Liability</H2>
             <P>
-              To the maximum extent permitted by law, DUKA and Awarizon shall not
+              To the maximum extent permitted by law, DUKA and Build&Funish shall not
               be liable for:
             </P>
             <UL items={[
@@ -363,20 +363,20 @@ export default function TermsPage() {
               <p className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
                 <span className="block">
                   Email:{" "}
-                  <a href="mailto:support@awarizon.shop" className="text-amber-500 hover:underline">
-                    support@awarizon.shop
+                  <a href="mailto:support@buildandfunish.com" className="text-amber-500 hover:underline">
+                    support@buildandfunish.com
                   </a>
                 </span>
                 <span className="block">
                   Website:{" "}
-                  <a href="https://awarizon.shop" className="text-amber-500 hover:underline">
-                    https://awarizon.shop
+                  <a href="https://buildandfunish.com" className="text-amber-500 hover:underline">
+                    https://buildandfunish.com
                   </a>
                 </span>
                 <span className="block">
                   Parent Company:{" "}
-                  <a href="https://awarizon.com" className="text-amber-500 hover:underline">
-                    https://awarizon.com
+                  <a href="https://buildandfunish.com" className="text-amber-500 hover:underline">
+                    https://buildandfunish.com
                   </a>
                 </span>
               </p>
@@ -388,7 +388,7 @@ export default function TermsPage() {
           {/* ── PRIVACY POLICY ───────────────────────────────── */}
           <section>
             <H1 id="privacy">Privacy Policy</H1>
-            <p className="text-sm text-zinc-400 mt-1 mb-6">DUKA — Powered by Awarizon · Effective Date: May 25, 2026</p>
+            <p className="text-sm text-zinc-400 mt-1 mb-6">DUKA — Powered by Build&Funish · Effective Date: May 25, 2026</p>
 
             <P>
               This Privacy Policy explains how DUKA collects, uses, stores, and
@@ -502,20 +502,20 @@ export default function TermsPage() {
               <p className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
                 <span className="block">
                   Email:{" "}
-                  <a href="mailto:support@awarizon.shop" className="text-amber-500 hover:underline">
-                    support@awarizon.shop
+                  <a href="mailto:support@buildandfunish.com" className="text-amber-500 hover:underline">
+                    support@buildandfunish.com
                   </a>
                 </span>
                 <span className="block">
                   Website:{" "}
-                  <a href="https://awarizon.shop" className="text-amber-500 hover:underline">
-                    https://awarizon.shop
+                  <a href="https://buildandfunish.com" className="text-amber-500 hover:underline">
+                    https://buildandfunish.com
                   </a>
                 </span>
                 <span className="block">
                   Parent Company:{" "}
-                  <a href="https://awarizon.com" className="text-amber-500 hover:underline">
-                    https://awarizon.com
+                  <a href="https://buildandfunish.com" className="text-amber-500 hover:underline">
+                    https://buildandfunish.com
                   </a>
                 </span>
               </p>
@@ -525,12 +525,12 @@ export default function TermsPage() {
           {/* Footer */}
           <div className="mt-16 pt-8 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <p className="text-xs text-zinc-400">
-              © {new Date().getFullYear()} Awarizon. All rights reserved.
+              © {new Date().getFullYear()} Build&Funish. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-xs text-zinc-400">
-              <a href="https://awarizon.shop" className="hover:text-amber-500 transition-colors">awarizon.shop</a>
-              <a href="https://awarizon.com"  className="hover:text-amber-500 transition-colors">awarizon.com</a>
-              <a href="mailto:support@awarizon.shop" className="hover:text-amber-500 transition-colors">support@awarizon.shop</a>
+              <a href="https://buildandfunish.com" className="hover:text-amber-500 transition-colors">buildandfunish.com</a>
+              <a href="https://buildandfunish.com"  className="hover:text-amber-500 transition-colors">buildandfunish.com</a>
+              <a href="mailto:support@buildandfunish.com" className="hover:text-amber-500 transition-colors">support@buildandfunish.com</a>
             </div>
           </div>
         </main>

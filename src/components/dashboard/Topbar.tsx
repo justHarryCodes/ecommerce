@@ -11,8 +11,6 @@ interface Props {
   store: StoreType;
 }
 
-const ROOT = (process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "awarizon.shop").replace(/^www\./, "");
-
 const PAGE_LABELS: Record<string, string> = {
   "/dashboard":            "Overview",
   "/dashboard/products":   "Products",
@@ -50,7 +48,7 @@ function InitialsAvatar({ name, email }: { name?: string | null; email: string }
 export default function DashboardTopbar({ user, store }: Props) {
   const pathname = usePathname();
   const pageLabel = getPageLabel(pathname);
-  const storeUrl = `https://${store.slug}.${ROOT}`;
+  const storeUrl = "/";
   const { setOpen } = useDashboardDrawer();
 
   return (
@@ -104,7 +102,7 @@ export default function DashboardTopbar({ user, store }: Props) {
             className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:border-accent-400 hover:text-accent-600 dark:hover:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950/30 transition-all"
           >
             <Store className="w-3.5 h-3.5" />
-            {store.slug}.{ROOT}
+            View public site
             <ExternalLink className="w-3 h-3 opacity-60" />
           </a>
 

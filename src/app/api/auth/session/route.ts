@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSessionCookie } from '@/lib/auth'
 import { adminAuth } from '@/lib/firebase-admin'
 import { cookies } from 'next/headers'
-import { verifyRecaptcha } from '@/lib/recaptcha'
 import { checkRateLimit } from '@/lib/rate-limit'
 
+// Used by both staff login (/auth/login) and customer login/signup
+// (/account/login, /account/signup) — just verifies the Firebase ID token
+// and mints a session cookie. No reCAPTCHA gate (removed).
 export async function POST(req: NextRequest) {
   // 10 login attempts per 15 minutes per IP
   const limited = await checkRateLimit(req, {
@@ -16,21 +18,10 @@ export async function POST(req: NextRequest) {
   if (limited) return limited
 
   try {
-    const { idToken, recaptchaToken } = await req.json()
+    const { idToken } = await req.json()
     if (!idToken) return NextResponse.json({ error: 'Missing token' }, { status: 400 })
 
-    const decoded = await adminAuth.verifyIdToken(idToken)
-
-    // Require reCAPTCHA for email/password sign-ins (Google OAuth skips this)
-    if (decoded.firebase?.sign_in_provider === 'password') {
-      if (!recaptchaToken) {
-        return NextResponse.json({ error: 'Please complete the reCAPTCHA' }, { status: 400 })
-      }
-      const valid = await verifyRecaptcha(recaptchaToken)
-      if (!valid) {
-        return NextResponse.json({ error: 'reCAPTCHA verification failed. Please try again.' }, { status: 400 })
-      }
-    }
+    await adminAuth.verifyIdToken(idToken)
 
     const sessionCookie = await createSessionCookie(idToken)
     const cookieStore = await cookies()

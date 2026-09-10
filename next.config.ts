@@ -15,14 +15,10 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: [
-        // awarizon.shop — all variants
-        "awarizon.shop",
-        "www.awarizon.shop",   // ← added: canonical www origin
-        "*.awarizon.shop",
-        // legacy / secondary domain
-        "awarizonmall.com",
-        "www.awarizonmall.com", // ← added: canonical www origin
-        "*.awarizonmall.com",
+        // buildandfunish.com — all variants
+        "buildandfunish.com",
+        "www.buildandfunish.com",
+        "*.buildandfunish.com",
         // local dev
         "localhost:3000",
       ],
@@ -34,10 +30,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
       { protocol: "https", hostname: "storage.googleapis.com" },
-      // awarizon.shop subdomains (storefronts)
-      { protocol: "https", hostname: "*.awarizon.shop" }, // ← added
-      // legacy domain
-      { protocol: "https", hostname: "*.awarizonmall.com" },
+      // buildandfunish.com subdomains
+      { protocol: "https", hostname: "*.buildandfunish.com" },
     ],
     unoptimized: false,
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
