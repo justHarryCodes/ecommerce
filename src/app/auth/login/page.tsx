@@ -136,7 +136,7 @@ export default function LoginPage() {
 
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-3">
-            <img src="/logo.svg" alt="BINTED" className="h-10 w-auto object-contain" />
+            <img src="/logo.svg" alt="Build&Funish" className="h-10 w-auto object-contain" />
           </Link>
         </div>
 
@@ -146,7 +146,7 @@ export default function LoginPage() {
               Staff dashboard
             </h2>
             <p className="text-zinc-400 text-lg leading-relaxed max-w-sm">
-              Sign in to manage BINTED&apos;s products, projects, leads, and content.
+              Sign in to manage Build&Funish&apos;s products, projects, leads, and content.
             </p>
           </div>
 
@@ -163,7 +163,7 @@ export default function LoginPage() {
         </div>
 
         <p className="relative z-10 text-zinc-600 text-xs">
-          © {new Date().getFullYear()} BINTED. All rights reserved.
+          © {new Date().getFullYear()} Build&Funish. All rights reserved.
         </p>
       </div>
 
@@ -172,7 +172,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="flex justify-center mb-8 lg:hidden">
             <Link href="/" className="inline-flex flex-col items-center gap-1">
-              <img src="/logo.svg" alt="BINTED" className="h-10 w-auto object-contain" />
+              <img src="/logo.svg" alt="Build&Funish" className="h-10 w-auto object-contain" />
             </Link>
           </div>
 
@@ -258,7 +258,7 @@ export default function LoginPage() {
                   Signing in...
                 </>
               ) : (
-                "Sign in to BINTED"
+                "Sign in to Build&Funish"
               )}
             </button>
           </form>

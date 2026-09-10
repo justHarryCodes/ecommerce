@@ -4,9 +4,9 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "BINTED", template: "%s | BINTED" },
+  title: { default: "Build&Funish", template: "%s | Build&Funish" },
   description:
-    "BINTED — Believe Interior Design. Integrated fabrication and interior solutions: metal fabrication, aluminium & glass, woodworking, decorative concrete, and complete interior fit-outs.",
+    "Build&Funish — integrated fabrication and interior solutions: metal fabrication, aluminium & glass, woodworking, decorative concrete, and complete interior fit-outs.",
 };
 
 export default function RootLayout({

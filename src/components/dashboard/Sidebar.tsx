@@ -73,7 +73,7 @@ function SidebarContent({
     <div className="flex h-full flex-col">
       {/* Brand */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
-        <img src="/logo.svg" alt="BINTED" style={{ height: 32, width: "auto" }} />
+        <img src="/logo.svg" alt="Build&Funish" style={{ height: 32, width: "auto" }} />
         {onClose && (
           <button
             onClick={onClose}

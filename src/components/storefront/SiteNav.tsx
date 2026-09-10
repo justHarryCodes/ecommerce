@@ -113,7 +113,7 @@ export default function SiteNav({ company, categories }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
 
-  const companyName = company?.name ?? "BINTED";
+  const companyName = company?.name ?? "Build&Funish";
   const logoUrl = company?.logoUrl ?? company?.logo_url ?? null;
 
   const collectionItems: NavDropdownItem[] = categories.map((c) => ({

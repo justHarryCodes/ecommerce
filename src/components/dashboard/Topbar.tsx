@@ -66,7 +66,7 @@ export default function DashboardTopbar({ user, store }: Props) {
 
         {/* Center — logo */}
         <div className="flex-1 flex items-center justify-center">
-          <img src="/logo.svg" alt="BINTED" style={{ height: 24, width: "auto" }} />
+          <img src="/logo.svg" alt="Build&Funish" style={{ height: 24, width: "auto" }} />
         </div>
 
         {/* Right — view storefront */}

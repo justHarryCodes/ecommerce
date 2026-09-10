@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <Link href="/">
-            <img src="/logo.svg" alt="BINTED" className="h-10 w-auto object-contain" />
+            <img src="/logo.svg" alt="Build&Funish" className="h-10 w-auto object-contain" />
           </Link>
         </div>
 
