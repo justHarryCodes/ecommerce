@@ -20,6 +20,7 @@ const schema = z.object({
   price: z.string().optional(),
   priceNote: z.string().max(100).optional(),
   comparePrice: z.coerce.number().optional(),
+  deliveryFee: z.coerce.number().min(0, "Delivery fee cannot be negative").optional(),
   stockQuantity: z.coerce.number().min(0, "Stock cannot be negative").int(),
   categoryId: z.string().optional(),
   subcategoryId: z.string().optional(),
@@ -63,6 +64,7 @@ export default function ProductForm({ categories, product }: Props) {
       price: product?.price != null ? String(product.price) : "",
       priceNote: product?.price_note ?? "",
       comparePrice: product?.compare_price ?? undefined,
+      deliveryFee: product?.delivery_fee ?? 0,
       stockQuantity: product?.stock_quantity ?? 0,
       categoryId: product?.category_id ?? "",
       subcategoryId: product?.subcategory_id ?? "",
@@ -211,6 +213,19 @@ export default function ProductForm({ categories, product }: Props) {
           placeholder="e.g. From ₦450,000 or Contact for quote" />
         <p className="text-xs text-surface-400 mt-1">
           Shown instead of (or alongside) the price on the catalog — useful when pricing depends on size/materials.
+        </p>
+      </div>
+
+      {/* Delivery fee */}
+      <div>
+        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+          Delivery fee (₦)
+        </label>
+        <input {...register("deliveryFee")} type="number" step="0.01" min="0"
+          className={inputClass} placeholder="0.00" />
+        {errors.deliveryFee && <p className="text-red-500 text-xs mt-1">{errors.deliveryFee.message}</p>}
+        <p className="text-xs text-surface-400 mt-1">
+          Flat cost to deliver this product — leave at 0 if delivery is free or quoted separately.
         </p>
       </div>
 

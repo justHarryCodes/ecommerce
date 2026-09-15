@@ -13,6 +13,7 @@ const Schema = z.object({
   price:            z.number().min(0).optional(),
   priceNote:        z.string().max(100).optional(),
   comparePrice:     z.number().min(0).optional(),
+  deliveryFee:      z.number().min(0).default(0),
   stockQuantity:    z.number().int().min(0).default(0),
   categoryId:       z.string().uuid().optional(),
   subcategoryId:    z.string().uuid().optional(),
@@ -86,13 +87,13 @@ export async function POST(req: NextRequest) {
   const rows = await query(`
     INSERT INTO products (
       store_id, category_id, subcategory_id, name, slug, description, short_description,
-      price, price_note, compare_price, stock_quantity, image_url, images, is_active, is_featured,
+      price, price_note, compare_price, delivery_fee, stock_quantity, image_url, images, is_active, is_featured,
       is_purchasable, size_options, material_options, color_options
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *
   `, [
     store.id, categoryId, d.subcategoryId || null, d.name, slug,
     d.description || null, d.shortDescription || null, d.price ?? null, d.priceNote || null, d.comparePrice || null,
-    d.stockQuantity, imageUrl, d.images, d.isActive, d.isFeatured,
+    d.deliveryFee, d.stockQuantity, imageUrl, d.images, d.isActive, d.isFeatured,
     d.isPurchasable, d.sizeOptions, d.materialOptions, d.colorOptions
   ])
 

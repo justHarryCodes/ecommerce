@@ -119,6 +119,10 @@ export interface Product {
   compare_price?: number
   priceNote?: string
   price_note?: string
+  // Flat delivery fee for this specific product — some items cost more
+  // to deliver than others (e.g. bulky furniture vs. small fittings).
+  deliveryFee?: number
+  delivery_fee?: number
   stockQuantity?: number
   stock_quantity?: number
   imageUrl?: string

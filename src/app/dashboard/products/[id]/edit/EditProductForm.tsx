@@ -24,6 +24,7 @@ export default function EditProductForm({ product }: Props) {
     description: product.description ?? "",
     price: String(product.price ?? ""),
     comparePrice: String(product.compare_price ?? product.comparePrice ?? ""),
+    deliveryFee: String(product.delivery_fee ?? product.deliveryFee ?? 0),
     stockQuantity: String(product.stock_quantity ?? product.stockQuantity ?? 0),
     isActive: product.is_active ?? product.isActive ?? true,
   });
@@ -61,6 +62,9 @@ export default function EditProductForm({ product }: Props) {
       };
       const cp = parseFloat(form.comparePrice);
       body.comparePrice = !isNaN(cp) && cp > 0 ? cp : null;
+
+      const df = parseFloat(form.deliveryFee);
+      body.deliveryFee = !isNaN(df) && df >= 0 ? df : 0;
 
       const res = await fetch(`/api/products/${product.id}`, {
         method: "PATCH",
@@ -164,6 +168,21 @@ export default function EditProductForm({ product }: Props) {
         <p className="text-xs text-surface-400">
           Set a compare price to show a crossed-out &ldquo;was ₦X&rdquo; on your storefront.
         </p>
+        <div>
+          <label className={labelClass}>Delivery fee (₦)</label>
+          <input
+            className={inputClass}
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.deliveryFee}
+            onChange={(e) => set("deliveryFee", e.target.value)}
+            placeholder="0.00"
+          />
+          <p className="text-xs text-surface-400 mt-1">
+            Flat cost to deliver this product — leave at 0 if delivery is free or quoted separately.
+          </p>
+        </div>
       </div>
 
       {/* Stock */}
