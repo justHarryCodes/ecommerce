@@ -8,7 +8,7 @@ import { useCart } from "./CartProvider";
 import CartDrawer from "./CartDrawer";
 import NavDropdown, { type NavDropdownItem } from "./NavDropdown";
 import SearchBar from "./SearchBar";
-import { AccountDropdown, MobileAccountGroup, type Viewer } from "./AccountMenu";
+import { AccountDropdown, MobileAccountGroup } from "./AccountMenu";
 import type { Store, Category } from "@/types";
 
 // Header is grouped into 4 dropdowns instead of a long flat link list:
@@ -28,7 +28,6 @@ const WORK_LINKS: NavDropdownItem[] = [
 interface Props {
   company: Store | null;
   categories: Category[];
-  viewer: Viewer | null;
 }
 
 function CartButton({ onClick, className }: { onClick: () => void; className?: string }) {
@@ -53,7 +52,7 @@ function CartButton({ onClick, className }: { onClick: () => void; className?: s
   );
 }
 
-export default function SiteNav({ company, categories, viewer }: Props) {
+export default function SiteNav({ company, categories }: Props) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -120,7 +119,7 @@ export default function SiteNav({ company, categories, viewer }: Props) {
 
             {/* Desktop right side */}
             <div className="hidden lg:flex items-center gap-1 shrink-0">
-              <AccountDropdown viewer={viewer} align="right" />
+              <AccountDropdown align="right" />
               <CartButton onClick={() => setCartOpen(true)} className="hover:bg-black/5 dark:hover:bg-white/5" />
               <Link
                 href="/contact"
@@ -164,7 +163,7 @@ export default function SiteNav({ company, categories, viewer }: Props) {
               <MobileGroup title="Collections" items={collectionItems} onNavigate={() => setOpen(false)} />
               <MobileGroup title="Company" items={COMPANY_LINKS} onNavigate={() => setOpen(false)} />
               <MobileGroup title="Work" items={WORK_LINKS} onNavigate={() => setOpen(false)} />
-              <MobileAccountGroup viewer={viewer} onNavigate={() => setOpen(false)} />
+              <MobileAccountGroup onNavigate={() => setOpen(false)} />
 
               <Link
                 href="/contact"

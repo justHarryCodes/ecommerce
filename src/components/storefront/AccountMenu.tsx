@@ -9,15 +9,10 @@ import {
 } from "lucide-react";
 import { auth } from "@/lib/firebase-client";
 import NavDropdown from "./NavDropdown";
+import { useViewer, type Viewer } from "./ViewerProvider";
 
-// Resolved on the server from the session cookie (see (site)/layout.tsx), so
-// the header is correct on first paint and survives reloads — no flash of
-// "Sign In" while Firebase's client SDK boots.
-export interface Viewer {
-  name: string;
-  email: string;
-  isAdmin: boolean;
-}
+export type { Viewer };
+
 
 async function fullSignOut() {
   await signOut(auth).catch(() => {});
@@ -36,7 +31,8 @@ function memberLinks(isAdmin: boolean) {
 
 // Desktop header: signed in → avatar + first name with the full account menu;
 // signed out → Sign In / Create Account dropdown.
-export function AccountDropdown({ viewer, align }: { viewer: Viewer | null; align?: "left" | "right" }) {
+export function AccountDropdown({ align }: { align?: "left" | "right" }) {
+  const { viewer, clear } = useViewer();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -55,6 +51,15 @@ export function AccountDropdown({ viewer, align }: { viewer: Viewer | null; alig
       document.removeEventListener("keydown", onKey);
     };
   }, []);
+
+  if (viewer === undefined) {
+    // Still working out who is signed in — neutral label, no Sign In flash
+    return (
+      <div className="flex items-center gap-1.5 text-sm font-medium py-2" style={{ color: "var(--text-secondary)" }}>
+        <UserIcon className="w-4 h-4" /> Account
+      </div>
+    );
+  }
 
   if (!viewer) {
     return (
@@ -75,6 +80,7 @@ export function AccountDropdown({ viewer, align }: { viewer: Viewer | null; alig
   async function handleSignOut() {
     setOpen(false);
     await fullSignOut();
+    clear();
     router.push("/");
     router.refresh();
   }
@@ -133,15 +139,19 @@ export function AccountDropdown({ viewer, align }: { viewer: Viewer | null; alig
   );
 }
 
-export function MobileAccountGroup({ viewer, onNavigate }: { viewer: Viewer | null; onNavigate: () => void }) {
+export function MobileAccountGroup({ onNavigate }: { onNavigate: () => void }) {
+  const { viewer, clear } = useViewer();
   const router = useRouter();
 
   async function handleSignOut() {
     await fullSignOut();
+    clear();
     onNavigate();
     router.push("/");
     router.refresh();
   }
+
+  if (viewer === undefined) return null;
 
   const row = "text-left px-2 py-2.5 rounded-xl text-sm font-semibold transition-colors hover:opacity-80";
 
