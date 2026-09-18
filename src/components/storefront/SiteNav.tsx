@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Menu, X, ShoppingCart, User as UserIcon, LogOut } from "lucide-react";
-import { signOut, type User } from "firebase/auth";
-import { auth, onAuthStateChanged } from "@/lib/firebase-client";
+import { Menu, X, ShoppingCart } from "lucide-react";
 import { clLogo } from "@/lib/cloudinary";
 import { useCart } from "./CartProvider";
 import CartDrawer from "./CartDrawer";
 import NavDropdown, { type NavDropdownItem } from "./NavDropdown";
 import SearchBar from "./SearchBar";
+import { AccountDropdown, MobileAccountGroup, type Viewer } from "./AccountMenu";
 import type { Store, Category } from "@/types";
 
 // Header is grouped into 4 dropdowns instead of a long flat link list:
@@ -30,6 +28,7 @@ const WORK_LINKS: NavDropdownItem[] = [
 interface Props {
   company: Store | null;
   categories: Category[];
+  viewer: Viewer | null;
 }
 
 function CartButton({ onClick, className }: { onClick: () => void; className?: string }) {
@@ -54,61 +53,7 @@ function CartButton({ onClick, className }: { onClick: () => void; className?: s
   );
 }
 
-// Account dropdown swaps its items based on live Firebase auth state —
-// same session cookie/project as staff, role is just decided elsewhere.
-function AccountDropdown({ align }: { align?: "left" | "right" }) {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setReady(true);
-    });
-    return unsub;
-  }, []);
-
-  async function handleSignOut() {
-    await signOut(auth);
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/");
-    router.refresh();
-  }
-
-  if (!ready) {
-    return (
-      <div className="flex items-center gap-1.5 text-sm font-medium py-2" style={{ color: "var(--text-secondary)" }}>
-        <UserIcon className="w-4 h-4" /> Account
-      </div>
-    );
-  }
-
-  const items: NavDropdownItem[] = user
-    ? [{ href: "/account", label: "My Account", description: "Profile, address & orders" }]
-    : [
-        { href: "/account/login", label: "Sign In" },
-        { href: "/account/signup", label: "Create Account" },
-      ];
-
-  return (
-    <div className="flex items-center">
-      <NavDropdown label="Account" icon={<UserIcon className="w-4 h-4" />} items={items} align={align} />
-      {user && (
-        <button
-          onClick={handleSignOut}
-          aria-label="Sign out"
-          className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5 ml-1"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-  );
-}
-
-export default function SiteNav({ company, categories }: Props) {
+export default function SiteNav({ company, categories, viewer }: Props) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -175,7 +120,7 @@ export default function SiteNav({ company, categories }: Props) {
 
             {/* Desktop right side */}
             <div className="hidden lg:flex items-center gap-1 shrink-0">
-              <AccountDropdown align="right" />
+              <AccountDropdown viewer={viewer} align="right" />
               <CartButton onClick={() => setCartOpen(true)} className="hover:bg-black/5 dark:hover:bg-white/5" />
               <Link
                 href="/contact"
@@ -219,7 +164,7 @@ export default function SiteNav({ company, categories }: Props) {
               <MobileGroup title="Collections" items={collectionItems} onNavigate={() => setOpen(false)} />
               <MobileGroup title="Company" items={COMPANY_LINKS} onNavigate={() => setOpen(false)} />
               <MobileGroup title="Work" items={WORK_LINKS} onNavigate={() => setOpen(false)} />
-              <MobileAccountGroup onNavigate={() => setOpen(false)} />
+              <MobileAccountGroup viewer={viewer} onNavigate={() => setOpen(false)} />
 
               <Link
                 href="/contact"
@@ -271,74 +216,3 @@ function MobileGroup({ title, items, onNavigate }: { title: string; items: NavDr
   );
 }
 
-function MobileAccountGroup({ onNavigate }: { onNavigate: () => void }) {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setReady(true);
-    });
-    return unsub;
-  }, []);
-
-  async function handleSignOut() {
-    await signOut(auth);
-    await fetch("/api/auth/logout", { method: "POST" });
-    onNavigate();
-    router.push("/");
-    router.refresh();
-  }
-
-  if (!ready) return null;
-
-  return (
-    <div>
-      <p className="px-2 text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "var(--text-muted)" }}>
-        Account
-      </p>
-      <div className="flex flex-col">
-        {user ? (
-          <>
-            <Link
-              href="/account"
-              onClick={onNavigate}
-              className="px-2 py-2.5 rounded-xl text-sm font-semibold transition-colors hover:opacity-80"
-              style={{ color: "var(--text-primary)" }}
-            >
-              My Account
-            </Link>
-            <button
-              onClick={handleSignOut}
-              className="text-left px-2 py-2.5 rounded-xl text-sm font-semibold transition-colors hover:opacity-80"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Sign Out
-            </button>
-          </>
-        ) : (
-          <>
-            <Link
-              href="/account/login"
-              onClick={onNavigate}
-              className="px-2 py-2.5 rounded-xl text-sm font-semibold transition-colors hover:opacity-80"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/account/signup"
-              onClick={onNavigate}
-              className="px-2 py-2.5 rounded-xl text-sm font-semibold transition-colors hover:opacity-80"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Create Account
-            </Link>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}

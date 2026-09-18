@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
     const cookieStore = await cookies()
     cookieStore.set('session', sessionCookie, {
       httpOnly: true,
-      secure: true, // always secure — both prod and dev with HTTPS
+      // Secure everywhere except local http dev — Safari (and some setups)
+      // silently drop Secure cookies on http://localhost, so login wouldn't stick.
+      secure: process.env.NODE_ENV === 'production', // always secure — both prod and dev with HTTPS
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 14,
       path: '/',
