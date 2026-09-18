@@ -15,13 +15,15 @@ interface Props {
   icon?: ReactNode;
   items: NavDropdownItem[];
   footer?: NavDropdownItem;
+  // Button-style last row (e.g. "Sign out") — same look as the footer link
+  action?: { label: string; onClick: () => void };
   align?: "left" | "right";
 }
 
 // Reusable click-to-open dropdown for the 4 header groups (Collections,
 // Company, Work, Account). Click rather than hover — works the same on
 // touch and desktop, no accidental-hover flicker.
-export default function NavDropdown({ label, icon, items, footer, align = "left" }: Props) {
+export default function NavDropdown({ label, icon, items, footer, action, align = "left" }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -76,6 +78,18 @@ export default function NavDropdown({ label, icon, items, footer, align = "left"
                 )}
               </Link>
             ))
+          )}
+          {action && (
+            <>
+              <div className="my-1.5 border-t" style={{ borderColor: "var(--border)" }} />
+              <button
+                onClick={() => { setOpen(false); action.onClick(); }}
+                className="w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {action.label}
+              </button>
+            </>
           )}
           {footer && (
             <>
