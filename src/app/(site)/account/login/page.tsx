@@ -44,7 +44,8 @@ export default function AccountLoginPage() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/account";
+  const explicitNext = searchParams.get("next");
+  const next = explicitNext || "/account";
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -63,7 +64,14 @@ function LoginForm() {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error ?? "Sign in failed");
     }
-    router.push(next);
+    // Explicit ?next= (e.g. bounced from checkout) wins; otherwise route by
+    // role — admins to the dashboard, customers to their account.
+    let dest = next;
+    if (!explicitNext) {
+      const r = await fetch("/api/auth/redirect").then((x) => x.json()).catch(() => null);
+      if (r?.url) dest = r.url;
+    }
+    router.push(dest);
     router.refresh();
   }
 

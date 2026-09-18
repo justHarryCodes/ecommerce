@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-import { verifySession, getUserStore } from "@/lib/auth";
+import { verifySession, isAdminEmail } from "@/lib/auth";
 
-// Used only by the staff login page (/auth/login) to decide where to send
-// a just-authenticated user. A logged-in non-admin (e.g. a customer who
-// wandered onto the staff login form) goes home rather than bouncing back
-// to the login form they just submitted.
+// Called right after any login (staff /auth/login and customer
+// /account/login + /account/signup) to decide where to send the user:
+// admins (ADMIN_EMAILS) land on the dashboard, everyone else on their
+// customer account section.
 export async function GET() {
   const user = await verifySession();
-  if (!user) return NextResponse.json({ url: "/auth/login" });
+  if (!user) return NextResponse.json({ url: "/account/login" });
 
-  const store = await getUserStore(user.firebaseUid);
-  if (!store) return NextResponse.json({ url: "/" });
-
-  return NextResponse.json({ url: "/dashboard" });
+  return NextResponse.json({ url: isAdminEmail(user.email) ? "/dashboard" : "/account" });
 }

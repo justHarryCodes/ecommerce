@@ -46,7 +46,8 @@ export default function AccountSignupPage() {
 function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/account";
+  const explicitNext = searchParams.get("next");
+  const next = explicitNext || "/account";
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -67,7 +68,12 @@ function SignupForm() {
     }
     // Ensure the customer row exists right away so /account has something to show
     await fetch("/api/account/profile").catch(() => {});
-    router.push(next);
+    let dest = next;
+    if (!explicitNext) {
+      const r = await fetch("/api/auth/redirect").then((x) => x.json()).catch(() => null);
+      if (r?.url) dest = r.url;
+    }
+    router.push(dest);
     router.refresh();
   }
 

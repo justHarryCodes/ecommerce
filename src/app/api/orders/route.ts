@@ -145,6 +145,13 @@ export async function POST(req: NextRequest) {
         `UPDATE customers SET name = $1, phone = $2, address = $3, city = $4, state = $5, updated_at = NOW() WHERE id = $6`,
         [d.customerName, d.customerPhone, d.deliveryAddress, d.deliveryCity || null, d.deliveryState || null, customer.id]
       ).catch(() => {});
+      // First order also seeds the address book (only if it's still empty)
+      query(
+        `INSERT INTO customer_addresses (customer_id, label, recipient_name, phone, address, city, state, is_default)
+         SELECT $1, 'Home', $2, $3, $4, $5, $6, TRUE
+         WHERE NOT EXISTS (SELECT 1 FROM customer_addresses WHERE customer_id = $1)`,
+        [customer.id, d.customerName, d.customerPhone, d.deliveryAddress, d.deliveryCity || null, d.deliveryState || null]
+      ).catch(() => {});
     }
 
     return NextResponse.json(
