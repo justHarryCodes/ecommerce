@@ -56,6 +56,29 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "decorative-concrete": Package,
 };
 
+// Shared markup for the three admin-curated homepage product placements —
+// Sponsored, Featured, Top Selling all render identically, just fed by a
+// different `is_*` flag on the product (checked in the dashboard product
+// form under "Homepage placement").
+function ProductRow({ title, products, alt = false }: { title: string; products: Product[]; alt?: boolean }) {
+  if (products.length === 0) return null;
+  return (
+    <section className="py-12" style={alt ? { background: "var(--bg-secondary)" } : undefined}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between mb-8">
+          <h2 className="text-xl sm:text-2xl font-black" style={{ color: "var(--text-primary)" }}>{title}</h2>
+          <Link href="/products" className="text-sm font-semibold shrink-0" style={{ color: "var(--accent)" }}>Shop all →</Link>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function NavTile({ href, label, desc, icon: Icon, className = "" }: {
   href: string; label: string; desc: string; icon: LucideIcon; className?: string;
 }) {
@@ -79,15 +102,17 @@ function NavTile({ href, label, desc, icon: Icon, className = "" }: {
 export default async function HomePage() {
   const company = await getCompany();
 
-  const [categories, featuredProducts, featuredProjects, testimonials, heroImages] = company
+  const [categories, featuredProducts, topSellingProducts, sponsoredProducts, featuredProjects, testimonials, heroImages] = company
     ? await Promise.all([
         query<Category>(`SELECT * FROM categories WHERE store_id = $1 AND parent_id IS NULL ORDER BY sort_order, name`, [company.id]),
         query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_featured = true ORDER BY sort_order LIMIT 8`, [company.id]),
+        query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_top_selling = true ORDER BY sort_order LIMIT 8`, [company.id]),
+        query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_sponsored = true ORDER BY sort_order LIMIT 8`, [company.id]),
         query<Project>(`SELECT * FROM projects WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 3`, [company.id]),
         query<Testimonial>(`SELECT * FROM testimonials WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 6`, [company.id]),
         getHeroCollageImages(8),
       ])
-    : [[], [], [], [], []];
+    : [[], [], [], [], [], [], []];
 
   const heroCollage = heroImages.length > 0
     ? Array.from({ length: 8 }, (_, i) => heroImages[i % heroImages.length])
@@ -179,22 +204,11 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Featured products — the centerpiece */}
-      {featuredProducts.length > 0 && (
-        <section className="py-12" style={{ background: "var(--bg-secondary)" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-end justify-between mb-8">
-              <h2 className="text-xl sm:text-2xl font-black" style={{ color: "var(--text-primary)" }}>Featured Products</h2>
-              <Link href="/products" className="text-sm font-semibold shrink-0" style={{ color: "var(--accent)" }}>Shop all →</Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {featuredProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Admin-curated homepage placements — each toggled per product from
+          the dashboard product form ("Homepage placement" checkboxes). */}
+      <ProductRow title="Sponsored Products" products={sponsoredProducts} />
+      <ProductRow title="Featured Products" products={featuredProducts} alt />
+      <ProductRow title="Top Selling" products={topSellingProducts} />
 
       {/* Trust badges — compact, not a full showcase section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

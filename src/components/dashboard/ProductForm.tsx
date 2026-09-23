@@ -30,6 +30,9 @@ const schema = z.object({
   categoryId: z.string().optional(),
   subcategoryId: z.string().optional(),
   isActive: z.boolean().default(true).optional(),
+  isFeatured: z.boolean().default(false).optional(),
+  isTopSelling: z.boolean().default(false).optional(),
+  isSponsored: z.boolean().default(false).optional(),
   isPurchasable: z.boolean().default(false).optional(),
 });
 type FormData = z.infer<typeof schema>;
@@ -77,6 +80,9 @@ export default function ProductForm({ categories, product }: Props) {
       categoryId: product?.category_id ?? "",
       subcategoryId: product?.subcategory_id ?? "",
       isActive: product?.is_active ?? true,
+      isFeatured: product?.is_featured ?? false,
+      isTopSelling: product?.is_top_selling ?? false,
+      isSponsored: product?.is_sponsored ?? false,
       isPurchasable: product?.is_purchasable ?? false,
     },
   });
@@ -357,6 +363,31 @@ export default function ProductForm({ categories, product }: Props) {
         <p className="text-xs text-surface-400 pl-7">
           On: shows an &ldquo;Add to Cart&rdquo; button and goes through checkout — requires a price above.
           Off (default): shows &ldquo;Request a Quote&rdquo; only, for custom/made-to-order work.
+        </p>
+      </div>
+
+      {/* Homepage placement */}
+      <div className="rounded-xl border border-surface-200 dark:border-surface-700 p-4 space-y-3">
+        <p className="text-sm font-medium text-surface-700 dark:text-surface-300">
+          Homepage placement
+        </p>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input {...register("isFeatured")} type="checkbox" id="isFeatured"
+            className="w-4 h-4 rounded accent-amber-400" />
+          <span className="text-sm text-surface-900 dark:text-white">Featured Products</span>
+        </label>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input {...register("isTopSelling")} type="checkbox" id="isTopSelling"
+            className="w-4 h-4 rounded accent-amber-400" />
+          <span className="text-sm text-surface-900 dark:text-white">Top Selling</span>
+        </label>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input {...register("isSponsored")} type="checkbox" id="isSponsored"
+            className="w-4 h-4 rounded accent-amber-400" />
+          <span className="text-sm text-surface-900 dark:text-white">Sponsored Products</span>
+        </label>
+        <p className="text-xs text-surface-400 pl-7">
+          Check any that apply to show this product in that section on the home page.
         </p>
       </div>
 

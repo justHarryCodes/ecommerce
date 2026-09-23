@@ -136,8 +136,14 @@ export interface Product {
   images?: string[]
   isActive?: boolean
   is_active?: boolean
+  // Homepage merchandising placements — each is an independent
+  // admin-curated flag (checkbox), not mutually exclusive.
   isFeatured?: boolean
   is_featured?: boolean
+  isTopSelling?: boolean
+  is_top_selling?: boolean
+  isSponsored?: boolean
+  is_sponsored?: boolean
   // Purchase mode — true: fixed-price, "Add to Cart" + real checkout.
   // false (default): "Request a Quote" only, no price required.
   isPurchasable?: boolean
