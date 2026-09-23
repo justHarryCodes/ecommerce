@@ -3,6 +3,7 @@ import { useState, useRef } from 'react'
 import { Upload, X, ImageIcon, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { clLogo } from '@/lib/cloudinary'
+import { compressImage } from '@/lib/image-compress'
 import toast from 'react-hot-toast'
 
 interface ImageUploadProps {
@@ -23,8 +24,11 @@ export function ImageUpload({ value, onChange, onRemove, className, label }: Ima
 
     setUploading(true)
     try {
+      // Shrink oversized photos in the browser before they ever hit our
+      // server or Cloudinary — keeps uploads fast and bandwidth-light.
+      const compressed = await compressImage(file)
       const fd = new FormData()
-      fd.append('file', file)
+      fd.append('file', compressed)
       const res = await fetch('/api/upload', { method: 'POST', body: fd })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Upload failed')

@@ -9,6 +9,9 @@ import toast from "react-hot-toast";
 import { Loader2, X, ImageIcon } from "lucide-react";
 import type { Category, Product } from "@/types";
 import { TagInput } from "@/components/dashboard/TagInput";
+import { compressImage } from "@/lib/image-compress";
+
+const MAX_IMAGES = 3;
 
 const schema = z.object({
   name: z.string().min(2, "Product name is required"),
@@ -43,10 +46,11 @@ const inputClass =
 export default function ProductForm({ categories, product }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(
-    product?.image_url ?? product?.images?.[0] ?? null
+  const [images, setImages] = useState<string[]>(
+    product?.images?.length ? product.images : product?.image_url ? [product.image_url] : []
   );
-  const [uploading, setUploading] = useState(false);
+  // Index of the slot currently uploading, so only that tile shows a spinner
+  const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
   const [selectedCatId, setSelectedCatId] = useState(product?.category_id ?? "");
   const [sizeOptions, setSizeOptions] = useState<string[]>(product?.size_options ?? []);
   const [materialOptions, setMaterialOptions] = useState<string[]>(product?.material_options ?? []);
@@ -79,18 +83,29 @@ export default function ProductForm({ categories, product }: Props) {
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
     if (!file) return;
+    if (images.length >= MAX_IMAGES) { toast.error(`Up to ${MAX_IMAGES} images allowed`); return; }
     if (file.size > 10 * 1024 * 1024) { toast.error("Image must be under 10MB"); return; }
-    setUploading(true);
+
+    const slot = images.length;
+    setUploadingSlot(slot);
     try {
+      // Shrink oversized photos in the browser first — keeps uploads fast
+      // and light on our server and Cloudinary bandwidth alike.
+      const compressed = await compressImage(file);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", compressed);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setImageUrl(data.url);
+      setImages((prev) => [...prev, data.url]);
     } catch { toast.error("Image upload failed"); }
-    finally { setUploading(false); }
+    finally { setUploadingSlot(null); }
+  }
+
+  function removeImage(index: number) {
+    setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function onSubmit(data: FormData) {
@@ -110,8 +125,8 @@ export default function ProductForm({ categories, product }: Props) {
         body: JSON.stringify({
           ...data,
           price: data.price ? Number(data.price) : undefined,
-          imageUrl: imageUrl,
-          images: imageUrl ? [imageUrl] : [],
+          imageUrl: images[0],
+          images,
           categoryId: data.categoryId || undefined,
           subcategoryId: data.subcategoryId || undefined,
           sizeOptions,
@@ -142,15 +157,31 @@ export default function ProductForm({ categories, product }: Props) {
       {/* Image upload */}
       <div>
         <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-          Product image
+          Product images
         </label>
-        <div className="flex items-start gap-4">
-          <label className="relative w-32 h-32 rounded-xl border-2 border-dashed border-surface-200 dark:border-surface-700 cursor-pointer hover:border-accent-400 transition-colors overflow-hidden shrink-0">
-            {imageUrl ? (
-              <img src={imageUrl} alt="Product" className="w-full h-full object-cover" />
-            ) : (
+        <div className="flex items-start gap-4 flex-wrap">
+          {images.map((url, i) => (
+            <div key={url} className="relative w-32 h-32 rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700 shrink-0">
+              <img src={url} alt={`Product ${i + 1}`} className="w-full h-full object-cover" />
+              {i === 0 && (
+                <span className="absolute bottom-1 left-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
+                  Main
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 hover:bg-black/80"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+
+          {images.length < MAX_IMAGES && (
+            <label className="relative w-32 h-32 rounded-xl border-2 border-dashed border-surface-200 dark:border-surface-700 cursor-pointer hover:border-accent-400 transition-colors overflow-hidden shrink-0">
               <div className="flex flex-col items-center justify-center h-full gap-2">
-                {uploading
+                {uploadingSlot !== null
                   ? <Loader2 className="w-5 h-5 text-surface-400 animate-spin" />
                   : <>
                       <ImageIcon className="w-5 h-5 text-surface-300" />
@@ -158,17 +189,15 @@ export default function ProductForm({ categories, product }: Props) {
                     </>
                 }
               </div>
-            )}
-            <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer"
-              onChange={handleImageUpload} disabled={uploading} />
-          </label>
-          {imageUrl && (
-            <button type="button" onClick={() => setImageUrl(null)}
-              className="mt-2 flex items-center gap-1 text-xs text-red-500 hover:text-red-700">
-              <X className="w-3 h-3" /> Remove
-            </button>
+              <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer"
+                onChange={handleImageUpload} disabled={uploadingSlot !== null} />
+            </label>
           )}
         </div>
+        <p className="text-xs text-surface-400 mt-2">
+          Up to {MAX_IMAGES} images. The first is used as the main/catalog photo. Large photos are
+          automatically resized before upload to keep things fast.
+        </p>
       </div>
 
       {/* Name */}

@@ -58,13 +58,13 @@ export default function CategoryManager({ storeId, categories }: Props) {
           parentId: addModal?.parentId ?? null,
         }),
       });
-      if (!res.ok) throw new Error("Failed to create category");
-      toast.success("Category created!");
+      if (!res.ok) throw new Error("Failed to create collection");
+      toast.success("Collection created!");
       setAddModal(null);
       setAddName("");
       router.refresh();
     } catch {
-      toast.error("Failed to create category");
+      toast.error("Failed to create collection");
     } finally {
       setSaving(false);
     }
@@ -80,7 +80,7 @@ export default function CategoryManager({ storeId, categories }: Props) {
         body: JSON.stringify({ name: editName.trim() }),
       });
       if (!res.ok) throw new Error("Failed to update");
-      toast.success("Category updated!");
+      toast.success("Collection updated!");
       setEditId(null);
       router.refresh();
     } catch {
@@ -91,11 +91,11 @@ export default function CategoryManager({ storeId, categories }: Props) {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this category? Products won't be deleted.")) return;
+    if (!confirm("Delete this collection? Products won't be deleted.")) return;
     try {
       const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-      toast.success("Category deleted");
+      toast.success("Collection deleted");
       router.refresh();
     } catch {
       toast.error("Delete failed");
@@ -110,7 +110,7 @@ export default function CategoryManager({ storeId, categories }: Props) {
         className="flex items-center gap-2 text-sm font-semibold text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 transition-colors"
       >
         <Plus className="w-4 h-4" />
-        Add category
+        Add collection
       </button>
 
       {/* Categories list */}
@@ -118,10 +118,10 @@ export default function CategoryManager({ storeId, categories }: Props) {
         <div className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-12 text-center">
           <Tag className="w-10 h-10 text-surface-200 dark:text-surface-700 mx-auto mb-3" />
           <h3 className="font-semibold text-surface-900 dark:text-white mb-1">
-            No categories yet
+            No collections yet
           </h3>
           <p className="text-sm text-surface-400">
-            Add categories to organize your products
+            Add collections to organize your products
           </p>
         </div>
       ) : (
@@ -169,7 +169,7 @@ export default function CategoryManager({ storeId, categories }: Props) {
 
                   <span className="text-xs text-surface-400 shrink-0">
                     {cat.subcategories.length > 0
-                      ? `${cat.subcategories.length} sub`
+                      ? `${cat.subcategories.length} sub-collection${cat.subcategories.length !== 1 ? "s" : ""}`
                       : ""}
                   </span>
 
@@ -284,7 +284,7 @@ export default function CategoryManager({ storeId, categories }: Props) {
                       className="flex items-center gap-2 w-full px-4 py-3 text-sm text-accent-600 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950/20 transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      Add subcategory
+                      Add sub-collection
                     </button>
                   </div>
                 )}
@@ -299,7 +299,7 @@ export default function CategoryManager({ storeId, categories }: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-700 p-6 w-full max-w-sm shadow-xl">
             <h3 className="font-bold text-surface-900 dark:text-white mb-4">
-              {addModal.parentId ? "Add subcategory" : "Add category"}
+              {addModal.parentId ? "Add sub-collection" : "Add collection"}
             </h3>
             <input
               autoFocus
@@ -310,7 +310,7 @@ export default function CategoryManager({ storeId, categories }: Props) {
                 if (e.key === "Enter") handleAdd();
                 if (e.key === "Escape") setAddModal(null);
               }}
-              placeholder="Category name…"
+              placeholder={addModal?.parentId ? "Sub-collection name…" : "Collection name…"}
               className="w-full px-3.5 py-2.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-400 mb-4"
             />
             <div className="flex gap-3">

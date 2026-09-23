@@ -19,7 +19,7 @@ const Schema = z.object({
   stockQuantity:    z.number().int().min(0).default(0),
   categoryId:       z.string().uuid().optional(),
   subcategoryId:    z.string().uuid().optional(),
-  images:           z.array(z.string()).default([]),
+  images:           z.array(z.string()).max(3, 'Up to 3 images allowed').default([]),
   imageUrl:         z.string().optional(),
   isActive:         z.boolean().default(true),
   isFeatured:       z.boolean().default(false),

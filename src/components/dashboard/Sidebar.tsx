@@ -34,7 +34,7 @@ const navItems = [
   { href: "/dashboard/products", label: "Products", icon: Package },
   { href: "/dashboard/orders", label: "Orders", icon: ShoppingBag },
   { href: "/dashboard/customers", label: "Customers", icon: Users },
-  { href: "/dashboard/categories", label: "Categories", icon: FolderTree },
+  { href: "/dashboard/categories", label: "Collections", icon: FolderTree },
   { href: "/dashboard/services", label: "Services", icon: Wrench },
   { href: "/dashboard/projects", label: "Projects", icon: Building2 },
   { href: "/dashboard/gallery", label: "Gallery", icon: ImageIcon },

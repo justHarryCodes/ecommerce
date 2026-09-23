@@ -25,14 +25,14 @@ export async function POST(req: NextRequest) {
         const stream = cloudinary.uploader.upload_stream(
           {
             folder: `duka/${user.firebaseUid}`,
-            // Cap master at 1600 px — display transforms (clCard/clBanner) derive from this
+            // Cap master at 1600 px — every display size (clCard/clMedium/
+            // clBanner/etc., src/lib/cloudinary.ts) is a dynamic transform
+            // derived from this master and generated lazily on first
+            // request, then cached on Cloudinary's CDN. No `eager` here —
+            // pre-generating fixed sizes at upload time would just create
+            // extra derivatives nothing in the app ever asks for by that
+            // exact URL, wasting processing and storage for no benefit.
             transformation: { width: 1600, crop: "limit", quality: "auto:good" },
-            // Pre-generate common display sizes in the background
-            eager: [
-              { width: 480, height: 480, crop: "fill",  quality: "auto:good", fetch_format: "auto" },
-              { width: 1200,              crop: "limit", quality: "auto:good", fetch_format: "auto" },
-            ],
-            eager_async: true,
           },
           (error, res) => (error ? reject(error) : resolve(res!))
         );

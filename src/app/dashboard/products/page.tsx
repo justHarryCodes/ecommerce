@@ -154,7 +154,7 @@ export default async function ProductsPage() {
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-1 justify-end">
                         <Link
-                          href={`/dashboard/products/${product.id}/edit`}
+                          href={`/dashboard/products/${product.id}`}
                           className="p-1.5 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-800 transition-all"
                         >
                           <Pencil className="w-3.5 h-3.5" />
@@ -192,7 +192,7 @@ export default async function ProductsPage() {
                   </div>
                 </div>
                 <Link
-                  href={`/dashboard/products/${product.id}/edit`}
+                  href={`/dashboard/products/${product.id}`}
                   className="p-2 rounded-lg text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800"
                 >
                   <Pencil className="w-4 h-4" />

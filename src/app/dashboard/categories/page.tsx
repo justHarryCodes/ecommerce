@@ -21,9 +21,9 @@ export default async function CategoriesPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 pt-4 lg:pt-0">
       <div>
-        <h1 className="text-xl font-bold text-surface-900 dark:text-white">Categories</h1>
+        <h1 className="text-xl font-bold text-surface-900 dark:text-white">Collections</h1>
         <p className="text-sm text-surface-500 dark:text-surface-400">
-          Organise your products with categories and subcategories
+          Organise your products with collections and sub-collections
         </p>
       </div>
 
