@@ -24,7 +24,9 @@ export default function EditProductForm({ product }: Props) {
     description: product.description ?? "",
     price: String(product.price ?? ""),
     comparePrice: String(product.compare_price ?? product.comparePrice ?? ""),
-    deliveryFee: String(product.delivery_fee ?? product.deliveryFee ?? 0),
+    deliveryFeeWithinState: String(product.delivery_fee_within_state ?? product.deliveryFeeWithinState ?? 0),
+    deliveryFeeInterstate: String(product.delivery_fee_interstate ?? product.deliveryFeeInterstate ?? 0),
+    deliveryTimeline: product.delivery_timeline ?? product.deliveryTimeline ?? "",
     stockQuantity: String(product.stock_quantity ?? product.stockQuantity ?? 0),
     isActive: product.is_active ?? product.isActive ?? true,
   });
@@ -63,8 +65,11 @@ export default function EditProductForm({ product }: Props) {
       const cp = parseFloat(form.comparePrice);
       body.comparePrice = !isNaN(cp) && cp > 0 ? cp : null;
 
-      const df = parseFloat(form.deliveryFee);
-      body.deliveryFee = !isNaN(df) && df >= 0 ? df : 0;
+      const dfWithin = parseFloat(form.deliveryFeeWithinState);
+      body.deliveryFeeWithinState = !isNaN(dfWithin) && dfWithin >= 0 ? dfWithin : 0;
+      const dfInter = parseFloat(form.deliveryFeeInterstate);
+      body.deliveryFeeInterstate = !isNaN(dfInter) && dfInter >= 0 ? dfInter : 0;
+      body.deliveryTimeline = form.deliveryTimeline.trim() || null;
 
       const res = await fetch(`/api/products/${product.id}`, {
         method: "PATCH",
@@ -138,7 +143,7 @@ export default function EditProductForm({ product }: Props) {
       {/* Pricing */}
       <div className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-5 space-y-4">
         <h2 className="text-sm font-bold text-surface-900 dark:text-white">Pricing</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Price (₦)</label>
             <input
@@ -168,20 +173,43 @@ export default function EditProductForm({ product }: Props) {
         <p className="text-xs text-surface-400">
           Set a compare price to show a crossed-out &ldquo;was ₦X&rdquo; on your storefront.
         </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Delivery — within state (₦)</label>
+            <input
+              className={inputClass}
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.deliveryFeeWithinState}
+              onChange={(e) => set("deliveryFeeWithinState", e.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Delivery — outside state (₦)</label>
+            <input
+              className={inputClass}
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.deliveryFeeInterstate}
+              onChange={(e) => set("deliveryFeeInterstate", e.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-surface-400">
+          Leave both at 0 if delivery is free or quoted separately.
+        </p>
         <div>
-          <label className={labelClass}>Delivery fee (₦)</label>
+          <label className={labelClass}>Delivery timeline</label>
           <input
             className={inputClass}
-            type="number"
-            min="0"
-            step="0.01"
-            value={form.deliveryFee}
-            onChange={(e) => set("deliveryFee", e.target.value)}
-            placeholder="0.00"
+            value={form.deliveryTimeline}
+            onChange={(e) => set("deliveryTimeline", e.target.value)}
+            placeholder="e.g. 3-5 business days, or 2 weeks — made to order"
           />
-          <p className="text-xs text-surface-400 mt-1">
-            Flat cost to deliver this product — leave at 0 if delivery is free or quoted separately.
-          </p>
         </div>
       </div>
 

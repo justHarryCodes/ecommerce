@@ -102,7 +102,7 @@ export default function ProjectForm({ project }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Category</label>
           <select
@@ -148,7 +148,7 @@ export default function ProjectForm({ project }: Props) {
       <MultiImageUpload label="Before images" values={form.beforeImages} onChange={(v) => set("beforeImages", v)} />
       <MultiImageUpload label="After images" values={form.afterImages} onChange={(v) => set("afterImages", v)} />
 
-      <div className="grid grid-cols-2 gap-4 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"

@@ -20,7 +20,9 @@ const schema = z.object({
   price: z.string().optional(),
   priceNote: z.string().max(100).optional(),
   comparePrice: z.coerce.number().optional(),
-  deliveryFee: z.coerce.number().min(0, "Delivery fee cannot be negative").optional(),
+  deliveryFeeWithinState: z.coerce.number().min(0, "Delivery fee cannot be negative").optional(),
+  deliveryFeeInterstate: z.coerce.number().min(0, "Delivery fee cannot be negative").optional(),
+  deliveryTimeline: z.string().max(120).optional(),
   stockQuantity: z.coerce.number().min(0, "Stock cannot be negative").int(),
   categoryId: z.string().optional(),
   subcategoryId: z.string().optional(),
@@ -64,7 +66,9 @@ export default function ProductForm({ categories, product }: Props) {
       price: product?.price != null ? String(product.price) : "",
       priceNote: product?.price_note ?? "",
       comparePrice: product?.compare_price ?? undefined,
-      deliveryFee: product?.delivery_fee ?? 0,
+      deliveryFeeWithinState: product?.delivery_fee_within_state ?? 0,
+      deliveryFeeInterstate: product?.delivery_fee_interstate ?? 0,
+      deliveryTimeline: product?.delivery_timeline ?? "",
       stockQuantity: product?.stock_quantity ?? 0,
       categoryId: product?.category_id ?? "",
       subcategoryId: product?.subcategory_id ?? "",
@@ -186,7 +190,7 @@ export default function ProductForm({ categories, product }: Props) {
       </div>
 
       {/* Price */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
             Price (₦)
@@ -216,17 +220,38 @@ export default function ProductForm({ categories, product }: Props) {
         </p>
       </div>
 
-      {/* Delivery fee */}
+      {/* Delivery */}
       <div>
-        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-          Delivery fee (₦)
-        </label>
-        <input {...register("deliveryFee")} type="number" step="0.01" min="0"
-          className={inputClass} placeholder="0.00" />
-        {errors.deliveryFee && <p className="text-red-500 text-xs mt-1">{errors.deliveryFee.message}</p>}
-        <p className="text-xs text-surface-400 mt-1">
-          Flat cost to deliver this product — leave at 0 if delivery is free or quoted separately.
+        <p className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">Delivery</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-surface-500 dark:text-surface-400 mb-1.5">
+              Within state (₦)
+            </label>
+            <input {...register("deliveryFeeWithinState")} type="number" step="0.01" min="0"
+              className={inputClass} placeholder="0.00" />
+            {errors.deliveryFeeWithinState && <p className="text-red-500 text-xs mt-1">{errors.deliveryFeeWithinState.message}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-surface-500 dark:text-surface-400 mb-1.5">
+              Outside state / interstate (₦)
+            </label>
+            <input {...register("deliveryFeeInterstate")} type="number" step="0.01" min="0"
+              className={inputClass} placeholder="0.00" />
+            {errors.deliveryFeeInterstate && <p className="text-red-500 text-xs mt-1">{errors.deliveryFeeInterstate.message}</p>}
+          </div>
+        </div>
+        <p className="text-xs text-surface-400 mt-1.5">
+          Leave both at 0 if delivery is free or quoted separately.
         </p>
+        <div className="mt-3">
+          <label className="block text-xs font-medium text-surface-500 dark:text-surface-400 mb-1.5">
+            Delivery timeline
+          </label>
+          <input {...register("deliveryTimeline")} className={inputClass}
+            placeholder="e.g. 3-5 business days, or 2 weeks — made to order" />
+          {errors.deliveryTimeline && <p className="text-red-500 text-xs mt-1">{errors.deliveryTimeline.message}</p>}
+        </div>
       </div>
 
       {/* Catalog options */}
@@ -264,7 +289,7 @@ export default function ProductForm({ categories, product }: Props) {
       </div>
 
       {/* Category */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
             Category

@@ -80,7 +80,7 @@ export default function TestimonialManager({ testimonials }: { testimonials: Tes
             onChange={(url) => set("photoUrl", url)}
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Customer name</label>
               <input
@@ -112,7 +112,7 @@ export default function TestimonialManager({ testimonials }: { testimonials: Tes
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
             <div>
               <label className={labelClass}>Rating</label>
               <select

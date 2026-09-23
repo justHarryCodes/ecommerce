@@ -119,10 +119,16 @@ export interface Product {
   compare_price?: number
   priceNote?: string
   price_note?: string
-  // Flat delivery fee for this specific product — some items cost more
-  // to deliver than others (e.g. bulky furniture vs. small fittings).
-  deliveryFee?: number
-  delivery_fee?: number
+  // Zone-based delivery fees for this specific product — some items cost
+  // more to deliver than others (e.g. bulky furniture vs. small fittings),
+  // and interstate delivery usually costs more than within the state.
+  deliveryFeeWithinState?: number
+  delivery_fee_within_state?: number
+  deliveryFeeInterstate?: number
+  delivery_fee_interstate?: number
+  // Free-text delivery estimate, e.g. "3-5 business days" or "2 weeks — made to order".
+  deliveryTimeline?: string
+  delivery_timeline?: string
   stockQuantity?: number
   stock_quantity?: number
   imageUrl?: string
