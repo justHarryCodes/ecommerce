@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Upload, X, GripVertical, Star, Loader2, ImagePlus } from "lucide-react";
 import { Tip } from "@/components/dashboard/Tip";
 import { clBanner, clThumb } from "@/lib/cloudinary";
+import { uploadImage } from "@/lib/upload-image";
 import type { Product } from "@/types";
 
 interface Props {
@@ -23,15 +24,12 @@ export default function StorefrontPageClient({ initialBanners, initialFeatured, 
 
   // ── Banner upload ──────────────────────────────────────
   async function uploadBanner(file: File) {
-    if (file.size > 8 * 1024 * 1024) { toast.error("Image must be under 8 MB"); return; }
+    if (banners.length >= 5) { toast.error("Up to 5 banner images allowed"); return; }
+    if (file.size > 20 * 1024 * 1024) { toast.error("Image must be under 20MB"); return; }
     setUploadingBanner(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      setBanners((prev) => [...prev, data.url].slice(0, 5));
+      const url = await uploadImage(file);
+      setBanners((prev) => (prev.length >= 5 ? prev : [...prev, url]));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {

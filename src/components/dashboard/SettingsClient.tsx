@@ -24,6 +24,7 @@ import { auth } from "@/lib/firebase-client";
 import type { Store as StoreType } from "@/types";
 import { Tip } from "@/components/dashboard/Tip";
 import { clLogo } from "@/lib/cloudinary";
+import { uploadImage } from "@/lib/upload-image";
 
 interface Props {
   store: StoreType;
@@ -99,18 +100,15 @@ export default function SettingsClient({ store: initial }: Props) {
 
   async function uploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
     setLogoUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      change("logoUrl", data.url);
+      const url = await uploadImage(file);
+      change("logoUrl", url);
       toast.success("Logo uploaded");
-    } catch {
-      toast.error("Logo upload failed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Logo upload failed");
     } finally {
       setLogoUploading(false);
     }
