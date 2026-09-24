@@ -13,8 +13,14 @@ export async function compressImage(
   maxDim = MAX_DIMENSION,
   quality = QUALITY
 ): Promise<File> {
-  // SVGs and other non-raster types aren't helped by canvas re-encoding.
-  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") return file;
+  // SVGs aren't helped by canvas re-encoding. Everything else is worth
+  // *attempting* even when the browser reports no/an odd MIME type — many
+  // phone photos (HEIC especially) come through with file.type === "" or
+  // something unexpected, and skipping compression on those is exactly how
+  // an uncompressed multi-MB original used to slip through. createImageBitmap
+  // below still fails safely (falls back to the original) if it truly can't
+  // decode the file.
+  if (file.type === "image/svg+xml") return file;
   if (file.size < SKIP_BELOW_BYTES) return file;
 
   try {

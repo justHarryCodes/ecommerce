@@ -6,62 +6,80 @@ import { cacheDelPattern } from '@/lib/redis'
 type Params = { params: Promise<{ productId: string }> }
 
 export async function GET(_: NextRequest, { params }: Params) {
-  const user = await verifySession()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const store = await getUserStore(user.firebaseUid)
-  if (!store) return NextResponse.json({ error: 'No store' }, { status: 404 })
+  try {
+    const user = await verifySession()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const store = await getUserStore(user.firebaseUid)
+    if (!store) return NextResponse.json({ error: 'No store' }, { status: 404 })
 
-  const { productId } = await params
-  const row = await queryOne('SELECT * FROM products WHERE id=$1 AND store_id=$2', [productId, store.id])
-  if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json({ data: toCamel(row as Record<string, unknown>) })
+    const { productId } = await params
+    const row = await queryOne('SELECT * FROM products WHERE id=$1 AND store_id=$2', [productId, store.id])
+    if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ data: toCamel(row as Record<string, unknown>) })
+  } catch (err) {
+    console.error('[products/:id] GET error:', err)
+    return NextResponse.json({ error: 'Failed to load product' }, { status: 500 })
+  }
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const user = await verifySession()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const store = await getUserStore(user.firebaseUid)
-  if (!store) return NextResponse.json({ error: 'No store' }, { status: 404 })
-  const subErr = await requireSubscription(store)
-  if (subErr) return subErr
+  try {
+    const user = await verifySession()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const store = await getUserStore(user.firebaseUid)
+    if (!store) return NextResponse.json({ error: 'No store' }, { status: 404 })
+    const subErr = await requireSubscription(store)
+    if (subErr) return subErr
 
-  const { productId } = await params
-  const body = await req.json()
-  const allowed = ['name', 'description', 'short_description', 'price', 'price_note', 'compare_price',
-    'delivery_fee_within_state', 'delivery_fee_interstate', 'delivery_timeline',
-    'stock_quantity', 'category_id', 'subcategory_id', 'image_url', 'images', 'is_active',
-    'is_featured', 'is_top_selling', 'is_sponsored', 'is_purchasable', 'sort_order',
-    'size_options', 'material_options', 'color_options']
-  const sets: string[] = []; const vals: unknown[] = []; let i = 1
+    const { productId } = await params
+    const body = await req.json()
+    const allowed = ['name', 'description', 'short_description', 'price', 'price_note', 'compare_price',
+      'delivery_fee_within_state', 'delivery_fee_interstate', 'delivery_timeline',
+      'stock_quantity', 'category_id', 'subcategory_id', 'image_url', 'images', 'is_active',
+      'is_featured', 'is_top_selling', 'is_sponsored', 'is_purchasable', 'sort_order',
+      'size_options', 'material_options', 'color_options']
+    const sets: string[] = []; const vals: unknown[] = []; let i = 1
 
-  for (const [key, val] of Object.entries(body)) {
-    const col = key.replace(/([A-Z])/g, c => `_${c.toLowerCase()}`)
-    if (!allowed.includes(col)) continue
-    if (col === 'images' && (!Array.isArray(val) || val.length > 3)) {
-      return NextResponse.json({ error: 'Up to 3 images allowed' }, { status: 422 })
+    for (const [key, val] of Object.entries(body)) {
+      const col = key.replace(/([A-Z])/g, c => `_${c.toLowerCase()}`)
+      if (!allowed.includes(col)) continue
+      if (col === 'images' && (!Array.isArray(val) || val.length > 3)) {
+        return NextResponse.json({ error: 'Up to 3 images allowed' }, { status: 422 })
+      }
+      sets.push(`${col}=$${i++}`); vals.push(val)
     }
-    sets.push(`${col}=$${i++}`); vals.push(val)
-  }
-  if (!sets.length) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
-  sets.push(`updated_at = NOW()`)
-  vals.push(productId, store.id)
+    if (!sets.length) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
+    sets.push(`updated_at = NOW()`)
+    vals.push(productId, store.id)
 
-  const rows = await query(
-    `UPDATE products SET ${sets.join(',')} WHERE id=$${i++} AND store_id=$${i} RETURNING *`, vals
-  )
-  if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  await cacheDelPattern(`products:${store.id}*`)
-  return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) })
+    const rows = await query(
+      `UPDATE products SET ${sets.join(',')} WHERE id=$${i++} AND store_id=$${i} RETURNING *`, vals
+    )
+    if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    await cacheDelPattern(`products:${store.id}*`)
+    return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) })
+  } catch (err) {
+    // Always return JSON — an uncaught throw here would otherwise surface
+    // to the client as an HTML error page, which then fails to parse as
+    // JSON with a cryptic "unexpected token/type" error.
+    console.error('[products/:id] PATCH error:', err)
+    return NextResponse.json({ error: 'Failed to save product' }, { status: 500 })
+  }
 }
 
 export async function DELETE(_: NextRequest, { params }: Params) {
-  const user = await verifySession()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const store = await getUserStore(user.firebaseUid)
-  if (!store) return NextResponse.json({ error: 'No store' }, { status: 404 })
+  try {
+    const user = await verifySession()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const store = await getUserStore(user.firebaseUid)
+    if (!store) return NextResponse.json({ error: 'No store' }, { status: 404 })
 
-  const { productId } = await params
-  await query('DELETE FROM products WHERE id=$1 AND store_id=$2', [productId, store.id])
-  await cacheDelPattern(`products:${store.id}*`)
-  return NextResponse.json({ ok: true })
+    const { productId } = await params
+    await query('DELETE FROM products WHERE id=$1 AND store_id=$2', [productId, store.id])
+    await cacheDelPattern(`products:${store.id}*`)
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[products/:id] DELETE error:', err)
+    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
+  }
 }

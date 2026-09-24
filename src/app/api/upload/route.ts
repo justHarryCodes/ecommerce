@@ -46,6 +46,10 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     console.error("[upload] error:", err);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    // Admin-only endpoint — safe to surface Cloudinary's actual reason
+    // (e.g. "Invalid image file") instead of a generic message, so a bad
+    // upload is diagnosable from the toast alone.
+    const message = err instanceof Error && err.message ? err.message : "Upload failed";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { Loader2, X, ImageIcon } from "lucide-react";
 import type { Category, Product } from "@/types";
 import { TagInput } from "@/components/dashboard/TagInput";
-import { compressImage } from "@/lib/image-compress";
+import { uploadImage } from "@/lib/upload-image";
 
 const MAX_IMAGES = 3;
 
@@ -92,22 +92,18 @@ export default function ProductForm({ categories, product }: Props) {
     e.target.value = ""; // allow re-selecting the same file later
     if (!file) return;
     if (images.length >= MAX_IMAGES) { toast.error(`Up to ${MAX_IMAGES} images allowed`); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("Image must be under 10MB"); return; }
+    if (file.size > 20 * 1024 * 1024) { toast.error("Image must be under 20MB"); return; }
 
     const slot = images.length;
     setUploadingSlot(slot);
     try {
-      // Shrink oversized photos in the browser first — keeps uploads fast
-      // and light on our server and Cloudinary bandwidth alike.
-      const compressed = await compressImage(file);
-      const fd = new FormData();
-      fd.append("file", compressed);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setImages((prev) => [...prev, data.url]);
-    } catch { toast.error("Image upload failed"); }
-    finally { setUploadingSlot(null); }
+      const url = await uploadImage(file);
+      setImages((prev) => [...prev, url]);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Image upload failed");
+    } finally {
+      setUploadingSlot(null);
+    }
   }
 
   function removeImage(index: number) {
@@ -141,6 +137,10 @@ export default function ProductForm({ categories, product }: Props) {
         }),
       });
 
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        throw new Error(`Server error (HTTP ${res.status}). Please try again.`);
+      }
       const json = await res.json();
       if (!res.ok) throw new Error(
         typeof json.error === "string" ? json.error : "Failed to save product"

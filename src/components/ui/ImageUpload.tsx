@@ -3,7 +3,7 @@ import { useState, useRef } from 'react'
 import { Upload, X, ImageIcon, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { clLogo } from '@/lib/cloudinary'
-import { compressImage } from '@/lib/image-compress'
+import { uploadImage } from '@/lib/upload-image'
 import toast from 'react-hot-toast'
 
 interface ImageUploadProps {
@@ -19,20 +19,16 @@ export function ImageUpload({ value, onChange, onRemove, className, label }: Ima
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleFile(file: File) {
-    if (!file.type.startsWith('image/')) { toast.error('Only image files allowed'); return }
-    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10MB'); return }
+    // Some phone photos (HEIC especially) report no/an odd MIME type —
+    // reject only when it's clearly something else (a PDF, video, etc.),
+    // and let compression + the server's own check be the real authority.
+    if (file.type && !file.type.startsWith('image/')) { toast.error('Only image files allowed'); return }
+    if (file.size > 20 * 1024 * 1024) { toast.error('Image must be under 20MB'); return }
 
     setUploading(true)
     try {
-      // Shrink oversized photos in the browser before they ever hit our
-      // server or Cloudinary — keeps uploads fast and bandwidth-light.
-      const compressed = await compressImage(file)
-      const fd = new FormData()
-      fd.append('file', compressed)
-      const res = await fetch('/api/upload', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Upload failed')
-      onChange(data.url)
+      const url = await uploadImage(file)
+      onChange(url)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Upload failed')
     } finally {

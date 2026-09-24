@@ -67,42 +67,50 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await verifySession()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const store = await getUserStore(user.firebaseUid)
-  if (!store) return NextResponse.json({ error: 'No store' }, { status: 404 })
-  const subErr = await requireSubscription(store)
-  if (subErr) return subErr
+  try {
+    const user = await verifySession()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const store = await getUserStore(user.firebaseUid)
+    if (!store) return NextResponse.json({ error: 'No store' }, { status: 404 })
+    const subErr = await requireSubscription(store)
+    if (subErr) return subErr
 
-  const body = await req.json()
-  const parsed = Schema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    const body = await req.json()
+    const parsed = Schema.safeParse(body)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
 
-  const d = parsed.data
-  let slug = slugify(d.name)
-  const exists = await queryOne('SELECT id FROM products WHERE store_id=$1 AND slug=$2', [store.id, slug])
-  if (exists) slug = `${slug}-${Date.now()}`
+    const d = parsed.data
+    let slug = slugify(d.name)
+    const exists = await queryOne('SELECT id FROM products WHERE store_id=$1 AND slug=$2', [store.id, slug])
+    if (exists) slug = `${slug}-${Date.now()}`
 
-  const imageUrl = d.imageUrl || d.images[0] || null
+    const imageUrl = d.imageUrl || d.images[0] || null
 
-  // Fall back to Uncategorized when no category is provided
-  const categoryId = d.categoryId || await ensureUncategorized(store.id)
+    // Fall back to Uncategorized when no category is provided
+    const categoryId = d.categoryId || await ensureUncategorized(store.id)
 
-  const rows = await query(`
-    INSERT INTO products (
-      store_id, category_id, subcategory_id, name, slug, description, short_description,
-      price, price_note, compare_price, delivery_fee_within_state, delivery_fee_interstate, delivery_timeline,
-      stock_quantity, image_url, images, is_active, is_featured, is_top_selling, is_sponsored,
-      is_purchasable, size_options, material_options, color_options
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) RETURNING *
-  `, [
-    store.id, categoryId, d.subcategoryId || null, d.name, slug,
-    d.description || null, d.shortDescription || null, d.price ?? null, d.priceNote || null, d.comparePrice || null,
-    d.deliveryFeeWithinState, d.deliveryFeeInterstate, d.deliveryTimeline || null,
-    d.stockQuantity, imageUrl, d.images, d.isActive, d.isFeatured, d.isTopSelling, d.isSponsored,
-    d.isPurchasable, d.sizeOptions, d.materialOptions, d.colorOptions
-  ])
+    const rows = await query(`
+      INSERT INTO products (
+        store_id, category_id, subcategory_id, name, slug, description, short_description,
+        price, price_note, compare_price, delivery_fee_within_state, delivery_fee_interstate, delivery_timeline,
+        stock_quantity, image_url, images, is_active, is_featured, is_top_selling, is_sponsored,
+        is_purchasable, size_options, material_options, color_options
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) RETURNING *
+    `, [
+      store.id, categoryId, d.subcategoryId || null, d.name, slug,
+      d.description || null, d.shortDescription || null, d.price ?? null, d.priceNote || null, d.comparePrice || null,
+      d.deliveryFeeWithinState, d.deliveryFeeInterstate, d.deliveryTimeline || null,
+      d.stockQuantity, imageUrl, d.images, d.isActive, d.isFeatured, d.isTopSelling, d.isSponsored,
+      d.isPurchasable, d.sizeOptions, d.materialOptions, d.colorOptions
+    ])
 
-  await cacheDelPattern(`products:${store.id}*`)
-  return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) }, { status: 201 })
+    await cacheDelPattern(`products:${store.id}*`)
+    return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) }, { status: 201 })
+  } catch (err) {
+    // Always return JSON here — an uncaught throw (e.g. a DB error) would
+    // otherwise surface to the client as an HTML error page, which then
+    // fails to parse as JSON with a cryptic "unexpected token" error.
+    console.error('[products] POST error:', err)
+    return NextResponse.json({ error: 'Failed to save product' }, { status: 500 })
+  }
 }
