@@ -1,35 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySession, getUserStore, requireSubscription } from '@/lib/auth'
-import { query, queryOne, rowsToCamel, toCamel } from '@/lib/db'
+import { query, rowsToCamel } from '@/lib/db'
 import { cacheDelPattern } from '@/lib/redis'
-import { ensureUncategorized } from '@/lib/categories'
-import { slugify } from '@/lib/utils'
-import { z } from 'zod'
-
-const Schema = z.object({
-  name:             z.string().min(1).max(200),
-  description:      z.string().max(5000).optional(),
-  shortDescription: z.string().max(300).optional(),
-  price:            z.number().min(0).optional(),
-  priceNote:        z.string().max(100).optional(),
-  comparePrice:     z.number().min(0).optional(),
-  deliveryFeeWithinState: z.number().min(0).default(0),
-  deliveryFeeInterstate:  z.number().min(0).default(0),
-  deliveryTimeline:       z.string().max(120).optional(),
-  stockQuantity:    z.number().int().min(0).default(0),
-  categoryId:       z.string().uuid().optional(),
-  subcategoryId:    z.string().uuid().optional(),
-  images:           z.array(z.string()).max(3, 'Up to 3 images allowed').default([]),
-  imageUrl:         z.string().optional(),
-  isActive:         z.boolean().default(true),
-  isFeatured:       z.boolean().default(false),
-  isTopSelling:     z.boolean().default(false),
-  isSponsored:      z.boolean().default(false),
-  isPurchasable:    z.boolean().default(false),
-  sizeOptions:      z.array(z.string()).default([]),
-  materialOptions:  z.array(z.string()).default([]),
-  colorOptions:     z.array(z.string()).default([]),
-})
+import { createProduct } from '@/lib/products'
+import { ProductInputSchema } from '@/lib/product-schema'
 
 export async function GET(req: NextRequest) {
   const user = await verifySession()
@@ -76,36 +50,13 @@ export async function POST(req: NextRequest) {
     if (subErr) return subErr
 
     const body = await req.json()
-    const parsed = Schema.safeParse(body)
+    const parsed = ProductInputSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
 
-    const d = parsed.data
-    let slug = slugify(d.name)
-    const exists = await queryOne('SELECT id FROM products WHERE store_id=$1 AND slug=$2', [store.id, slug])
-    if (exists) slug = `${slug}-${Date.now()}`
-
-    const imageUrl = d.imageUrl || d.images[0] || null
-
-    // Fall back to Uncategorized when no category is provided
-    const categoryId = d.categoryId || await ensureUncategorized(store.id)
-
-    const rows = await query(`
-      INSERT INTO products (
-        store_id, category_id, subcategory_id, name, slug, description, short_description,
-        price, price_note, compare_price, delivery_fee_within_state, delivery_fee_interstate, delivery_timeline,
-        stock_quantity, image_url, images, is_active, is_featured, is_top_selling, is_sponsored,
-        is_purchasable, size_options, material_options, color_options
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) RETURNING *
-    `, [
-      store.id, categoryId, d.subcategoryId || null, d.name, slug,
-      d.description || null, d.shortDescription || null, d.price ?? null, d.priceNote || null, d.comparePrice || null,
-      d.deliveryFeeWithinState, d.deliveryFeeInterstate, d.deliveryTimeline || null,
-      d.stockQuantity, imageUrl, d.images, d.isActive, d.isFeatured, d.isTopSelling, d.isSponsored,
-      d.isPurchasable, d.sizeOptions, d.materialOptions, d.colorOptions
-    ])
+    const product = await createProduct(store.id, parsed.data)
 
     await cacheDelPattern(`products:${store.id}*`)
-    return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) }, { status: 201 })
+    return NextResponse.json({ data: product }, { status: 201 })
   } catch (err) {
     // Always return JSON here — an uncaught throw (e.g. a DB error) would
     // otherwise surface to the client as an HTML error page, which then

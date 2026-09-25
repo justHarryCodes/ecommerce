@@ -1,7 +1,7 @@
 import { verifySession, getUserStore } from "@/lib/auth";
 import { queryMany } from "@/lib/db";
 import Link from "next/link";
-import { Plus, Package, Pencil } from "lucide-react";
+import { Plus, Package, Pencil, Layers } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import DeleteProductButton from "@/components/dashboard/DeleteProductButton";
 import type { Product } from "@/types";
@@ -29,13 +29,22 @@ export default async function ProductsPage() {
             {products.length} product{products.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link
-          href="/dashboard/products/new"
-          className="flex items-center gap-2 bg-accent-400 hover:bg-accent-500 text-black font-semibold px-4 py-2.5 rounded-xl text-sm transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          Add product
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/products/bulk"
+            className="flex items-center gap-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-surface-900 dark:text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all"
+          >
+            <Layers className="w-4 h-4" />
+            Bulk add
+          </Link>
+          <Link
+            href="/dashboard/products/new"
+            className="flex items-center gap-2 bg-accent-400 hover:bg-accent-500 text-black font-semibold px-4 py-2.5 rounded-xl text-sm transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Add product
+          </Link>
+        </div>
       </div>
 
       <Tip id="products-guide" variant="tip">
