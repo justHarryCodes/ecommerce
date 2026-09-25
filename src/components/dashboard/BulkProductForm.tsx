@@ -7,6 +7,7 @@ import {
   Plus, X, Loader2, ImageIcon, ChevronDown, ChevronUp, Trash2, Check, AlertCircle,
 } from "lucide-react";
 import { uploadImage } from "@/lib/upload-image";
+import { TagInput } from "@/components/dashboard/TagInput";
 import type { Category } from "@/types";
 
 const MAX_PRODUCTS = 20;
@@ -39,6 +40,9 @@ interface DraftProduct {
   isFeatured: boolean;
   isTopSelling: boolean;
   isSponsored: boolean;
+  sizeOptions: string[];
+  materialOptions: string[];
+  colorOptions: string[];
   status: "pending" | "creating" | "done" | "error";
   resultError?: string;
 }
@@ -65,6 +69,9 @@ function newSlot(): DraftProduct {
     isFeatured: false,
     isTopSelling: false,
     isSponsored: false,
+    sizeOptions: [],
+    materialOptions: [],
+    colorOptions: [],
     status: "pending",
   };
 }
@@ -247,6 +254,9 @@ export default function BulkProductForm({ categories }: { categories: (Category 
           isFeatured: s.isFeatured,
           isTopSelling: s.isTopSelling,
           isSponsored: s.isSponsored,
+          sizeOptions: s.sizeOptions,
+          materialOptions: s.materialOptions,
+          colorOptions: s.colorOptions,
         };
       });
 
@@ -590,6 +600,29 @@ export default function BulkProductForm({ categories }: { categories: (Category 
                           className="w-4 h-4 rounded accent-amber-400" />
                         <span className="text-xs text-surface-700 dark:text-surface-300">Sponsored</span>
                       </label>
+                    </div>
+                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <TagInput
+                        label="Size options"
+                        values={slot.sizeOptions}
+                        onChange={(v) => patchSlot(slot.id, { sizeOptions: v })}
+                        placeholder="e.g. 3m Wide"
+                        disabled={!editable}
+                      />
+                      <TagInput
+                        label="Material options"
+                        values={slot.materialOptions}
+                        onChange={(v) => patchSlot(slot.id, { materialOptions: v })}
+                        placeholder="e.g. Mild Steel"
+                        disabled={!editable}
+                      />
+                      <TagInput
+                        label="Color options"
+                        values={slot.colorOptions}
+                        onChange={(v) => patchSlot(slot.id, { colorOptions: v })}
+                        placeholder="e.g. Charcoal Grey"
+                        disabled={!editable}
+                      />
                     </div>
                   </div>
                 )}
