@@ -76,7 +76,7 @@ export default function ProductForm({ categories, product }: Props) {
       freeDelivery: product?.free_delivery ?? false,
       deliveryFeeWithinState: product?.delivery_fee_within_state ?? 0,
       deliveryFeeInterstate: product?.delivery_fee_interstate ?? 0,
-      deliveryTimeline: product?.delivery_timeline ?? "",
+      deliveryTimeline: product?.delivery_timeline ?? "7-12 business days",
       stockQuantity: product?.stock_quantity ?? 0,
       categoryId: product?.category_id ?? "",
       subcategoryId: product?.subcategory_id ?? "",

@@ -68,7 +68,7 @@ function newSlot(): DraftProduct {
     freeDelivery: false,
     deliveryFeeWithinState: "0",
     deliveryFeeInterstate: "0",
-    deliveryTimeline: "",
+    deliveryTimeline: "7-12 business days",
     isFeatured: false,
     isTopSelling: false,
     isSponsored: false,
