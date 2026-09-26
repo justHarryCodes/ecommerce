@@ -3,6 +3,7 @@ import { queryOne, query, withTransaction } from "@/lib/db";
 import { getCompany, verifySession, getOrCreateCustomer } from "@/lib/auth";
 import { notifyStoreNewOrder } from "@/lib/push";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { AFFILIATE_COOKIE, resolveActiveAffiliate, computeCommission } from "@/lib/affiliates";
 import { z } from "zod";
 
 // Public — places a real order for the "Add to Cart" purchase path
@@ -63,6 +64,16 @@ export async function POST(req: NextRequest) {
 
     const d = parsed.data;
 
+    // Affiliate attribution — a stale/unknown/inactive code in the cookie is
+    // simply ignored, never blocks checkout. Commission is computed on the
+    // real product subtotal (summed from line items server-side, not the
+    // client-sent totalAmount) so a future delivery-fee addition to the
+    // order total never inflates what an affiliate is owed.
+    const refCode = req.cookies.get(AFFILIATE_COOKIE)?.value;
+    const affiliate = refCode ? await resolveActiveAffiliate(company.id, refCode) : null;
+    const subtotal = d.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+    const commissionAmount = affiliate ? computeCommission(subtotal, affiliate.commissionRate) : 0;
+
     // Validate products: must exist, be active, purchasable, and in stock
     for (const item of d.items) {
       const product = await queryOne<{ id: string; stock_quantity: number; is_purchasable: boolean }>(
@@ -88,8 +99,8 @@ export async function POST(req: NextRequest) {
         `INSERT INTO orders (
           store_id, customer_id, order_number, customer_name, customer_email, customer_phone,
           delivery_address, delivery_city, delivery_state, delivery_note,
-          subtotal, total, payment_method
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id, order_number`,
+          subtotal, total, payment_method, affiliate_id, affiliate_code, commission_amount
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id, order_number`,
         [
           company.id, customer?.id ?? null, orderNumber,
           d.customerName,
@@ -102,6 +113,9 @@ export async function POST(req: NextRequest) {
           d.totalAmount,
           d.totalAmount,
           dbPaymentMethod,
+          affiliate?.id ?? null,
+          affiliate?.code ?? null,
+          commissionAmount,
         ]
       );
 

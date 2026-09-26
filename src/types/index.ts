@@ -366,6 +366,31 @@ export interface Customer {
   total_spent?: number
 }
 
+export interface Affiliate {
+  id: string
+  storeId?: string
+  store_id?: string
+  firebaseUid?: string | null
+  firebase_uid?: string | null
+  name: string
+  email?: string
+  phone?: string
+  code: string
+  commissionRate?: number
+  commission_rate?: number
+  totalPaid?: number
+  total_paid?: number
+  isActive?: boolean
+  is_active?: boolean
+  createdAt?: string
+  created_at?: string
+  // Joined stats (admin list, affiliate's own dashboard) — not DB columns
+  orderCount?: number
+  order_count?: number
+  totalCommission?: number
+  total_commission?: number
+}
+
 export interface QuoteRequest {
   id: string
   storeId?: string
@@ -439,6 +464,12 @@ export interface Order {
   store_id?: string
   customerId?: string | null
   customer_id?: string | null
+  affiliateId?: string | null
+  affiliate_id?: string | null
+  affiliateCode?: string | null
+  affiliate_code?: string | null
+  commissionAmount?: number
+  commission_amount?: number
   orderNumber?: string
   order_number?: string
   customerName?: string

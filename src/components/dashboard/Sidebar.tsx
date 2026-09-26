@@ -22,6 +22,7 @@ import {
   ShoppingBag,
   Users,
   BarChart3,
+  Share2,
 } from "lucide-react";
 import { auth } from "@/lib/firebase-client";
 import { signOut } from "firebase/auth";
@@ -34,6 +35,7 @@ const navItems = [
   { href: "/dashboard/products", label: "Products", icon: Package },
   { href: "/dashboard/orders", label: "Orders", icon: ShoppingBag },
   { href: "/dashboard/customers", label: "Customers", icon: Users },
+  { href: "/dashboard/affiliates", label: "Affiliates", icon: Share2 },
   { href: "/dashboard/categories", label: "Collections", icon: FolderTree },
   { href: "/dashboard/services", label: "Services", icon: Wrench },
   { href: "/dashboard/projects", label: "Projects", icon: Building2 },

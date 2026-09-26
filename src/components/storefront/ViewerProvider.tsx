@@ -8,6 +8,7 @@ export interface Viewer {
   name: string;
   email: string;
   isAdmin: boolean;
+  isAffiliate: boolean;
 }
 
 interface Ctx {

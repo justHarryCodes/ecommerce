@@ -10,16 +10,22 @@ import { useViewer } from "./ViewerProvider";
 
 // The header's 4th group. Same slot, same look as Collections / Company /
 // Work — only what's inside changes with who is signed in:
-//   signed out → Sign In, Create Account
-//   customer   → "Account": Overview, Orders, Addresses, Profile, Sign out
+//   signed out → Sign In, Create Account, Become an Affiliate
+//   customer   → "Account": Overview, Orders, Addresses, Profile, [Affiliate
+//                dashboard or Become an Affiliate], Sign out
 //   admin      → "Dashboard": links into the admin area, Sign out
 
-const CUSTOMER_ITEMS: NavDropdownItem[] = [
-  { href: "/account", label: "My Account", description: "Overview & recent orders" },
-  { href: "/account/orders", label: "My Orders", description: "Track & confirm orders" },
-  { href: "/account/addresses", label: "Delivery Addresses" },
-  { href: "/account/profile", label: "Profile & Password" },
-];
+function customerItems(isAffiliate: boolean): NavDropdownItem[] {
+  return [
+    { href: "/account", label: "My Account", description: "Overview & recent orders" },
+    { href: "/account/orders", label: "My Orders", description: "Track & confirm orders" },
+    { href: "/account/addresses", label: "Delivery Addresses" },
+    { href: "/account/profile", label: "Profile & Password" },
+    isAffiliate
+      ? { href: "/affiliate", label: "Affiliate Dashboard", description: "Your link, referrals & earnings" }
+      : { href: "/affiliate/signup", label: "Become an Affiliate", description: "Earn commission on sales you refer" },
+  ];
+}
 
 const ADMIN_ITEMS: NavDropdownItem[] = [
   { href: "/dashboard", label: "Overview", description: "Manage the whole site" },
@@ -32,6 +38,7 @@ const ADMIN_ITEMS: NavDropdownItem[] = [
 const GUEST_ITEMS: NavDropdownItem[] = [
   { href: "/account/login", label: "Sign In" },
   { href: "/account/signup", label: "Create Account" },
+  { href: "/affiliate/signup", label: "Become an Affiliate", description: "Earn commission on sales you refer" },
 ];
 
 async function fullSignOut() {
@@ -84,7 +91,7 @@ export function AccountDropdown({ align }: { align?: "left" | "right" }) {
     <NavDropdown
       label="Account"
       icon={<UserIcon className="w-4 h-4" />}
-      items={CUSTOMER_ITEMS}
+      items={customerItems(viewer.isAffiliate)}
       action={{ label: "Sign out", onClick: handleSignOut }}
       align={align}
     />
@@ -97,7 +104,7 @@ export function MobileAccountGroup({ onNavigate }: { onNavigate: () => void }) {
 
   if (viewer === undefined) return null;
 
-  const items = !viewer ? GUEST_ITEMS : viewer.isAdmin ? ADMIN_ITEMS : CUSTOMER_ITEMS;
+  const items = !viewer ? GUEST_ITEMS : viewer.isAdmin ? ADMIN_ITEMS : customerItems(viewer.isAffiliate);
   const title = viewer?.isAdmin ? "Dashboard" : "Account";
   const row = "text-left px-2 py-2.5 rounded-xl text-sm font-semibold transition-colors hover:opacity-80";
 
