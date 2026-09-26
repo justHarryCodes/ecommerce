@@ -30,7 +30,9 @@ export const ProductInputSchema = z.object({
   isFeatured:       z.boolean().default(false),
   isTopSelling:     z.boolean().default(false),
   isSponsored:      z.boolean().default(false),
-  isPurchasable:    z.boolean().default(false),
+  // Defaults to true — this catalog sells real, in-stock items; quote-only
+  // is the deliberate exception (custom/made-to-order work), not the norm.
+  isPurchasable:    z.boolean().default(true),
   sizeOptions:      z.array(z.string()).default([]),
   materialOptions:  z.array(z.string()).default([]),
   colorOptions:     z.array(z.string()).default([]),

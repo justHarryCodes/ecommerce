@@ -34,7 +34,7 @@ const schema = z.object({
   isFeatured: z.boolean().default(false).optional(),
   isTopSelling: z.boolean().default(false).optional(),
   isSponsored: z.boolean().default(false).optional(),
-  isPurchasable: z.boolean().default(false).optional(),
+  isPurchasable: z.boolean().default(true).optional(),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -84,7 +84,7 @@ export default function ProductForm({ categories, product }: Props) {
       isFeatured: product?.is_featured ?? false,
       isTopSelling: product?.is_top_selling ?? false,
       isSponsored: product?.is_sponsored ?? false,
-      isPurchasable: product?.is_purchasable ?? false,
+      isPurchasable: product?.is_purchasable ?? true,
     },
   });
 
@@ -379,8 +379,8 @@ export default function ProductForm({ categories, product }: Props) {
           </span>
         </label>
         <p className="text-xs text-surface-400 pl-7">
-          On: shows an &ldquo;Add to Cart&rdquo; button and goes through checkout — requires a price above.
-          Off (default): shows &ldquo;Request a Quote&rdquo; only, for custom/made-to-order work.
+          On (default): shows an &ldquo;Add to Cart&rdquo; button and goes through checkout — requires a price above.
+          Off: shows &ldquo;Request a Quote&rdquo; only, for custom/made-to-order work.
         </p>
       </div>
 

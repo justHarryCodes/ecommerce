@@ -63,7 +63,7 @@ function newSlot(): DraftProduct {
     categoryId: "",
     subcategoryId: "",
     stockQuantity: "0",
-    isPurchasable: false,
+    isPurchasable: true,
     showAdvanced: false,
     freeDelivery: false,
     deliveryFeeWithinState: "0",
