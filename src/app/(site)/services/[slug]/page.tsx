@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { ChevronRight, Check } from "lucide-react";
 import { getCompany } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
-import { clBanner } from "@/lib/cloudinary";
 import ProductCard from "@/components/storefront/ProductCard";
+import ServiceGallery from "@/components/storefront/ServiceGallery";
 import QuoteRequestButton from "@/components/storefront/QuoteRequestButton";
 import type { Service, Product } from "@/types";
 
@@ -39,7 +39,8 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
     : [];
 
   const benefits = service.benefits ?? [];
-  const imageUrl = service.image_url ?? service.imageUrl;
+  const legacyImage = service.image_url ?? service.imageUrl;
+  const images = service.images && service.images.length > 0 ? service.images : legacyImage ? [legacyImage] : [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -49,11 +50,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
         <span style={{ color: "var(--text-primary)" }}>{service.name}</span>
       </nav>
 
-      {imageUrl && (
-        <div className="rounded-2xl overflow-hidden mb-8 aspect-[21/9]" style={{ background: "var(--bg-tertiary)" }}>
-          <img src={clBanner(imageUrl)} alt={service.name} className="w-full h-full object-cover" />
-        </div>
-      )}
+      <ServiceGallery images={images} name={service.name} />
 
       <div className="flex items-center gap-3 mb-3">
         <span className="text-3xl">{service.icon ?? "🛠️"}</span>

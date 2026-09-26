@@ -10,6 +10,7 @@ const Schema = z.object({
   description:       z.string().max(5000).optional(),
   icon:              z.string().max(20).optional(),
   imageUrl:          z.string().optional(),
+  images:            z.array(z.string()).max(3, 'Up to 3 images allowed').default([]),
   benefits:          z.array(z.string()).default([]),
   relatedProductIds: z.array(z.string().uuid()).default([]),
   isActive:          z.boolean().default(true),
@@ -44,14 +45,16 @@ export async function POST(req: NextRequest) {
   const exists = await queryOne('SELECT id FROM services WHERE store_id=$1 AND slug=$2', [store.id, slug])
   if (exists) slug = `${slug}-${Date.now()}`
 
+  const imageUrl = d.imageUrl || d.images[0] || null
+
   const rows = await query(`
     INSERT INTO services (
-      store_id, name, slug, short_description, description, icon, image_url,
+      store_id, name, slug, short_description, description, icon, image_url, images,
       benefits, related_product_ids, is_active, sort_order
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *
   `, [
     store.id, d.name, slug, d.shortDescription || null, d.description || null,
-    d.icon || null, d.imageUrl || null, d.benefits, d.relatedProductIds,
+    d.icon || null, imageUrl, d.images, d.benefits, d.relatedProductIds,
     d.isActive, d.sortOrder,
   ])
 

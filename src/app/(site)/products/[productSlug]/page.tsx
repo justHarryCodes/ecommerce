@@ -44,10 +44,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const images = product.images && product.images.length > 0 ? product.images : product.image_url ? [product.image_url] : [];
   const price = product.price;
+  const comparePrice = product.comparePrice ?? product.compare_price;
   const priceNote = product.price_note ?? product.priceNote;
   const sizeOptions = product.size_options ?? product.sizeOptions ?? [];
   const materialOptions = product.material_options ?? product.materialOptions ?? [];
   const colorOptions = product.color_options ?? product.colorOptions ?? [];
+  const freeDelivery = product.freeDelivery ?? product.free_delivery ?? false;
+  const deliveryWithinState = product.deliveryFeeWithinState ?? product.delivery_fee_within_state ?? 0;
+  const deliveryInterstate = product.deliveryFeeInterstate ?? product.delivery_fee_interstate ?? 0;
+  const deliveryTimeline = product.deliveryTimeline ?? product.delivery_timeline;
+  const hasDeliveryInfo = freeDelivery || deliveryWithinState > 0 || deliveryInterstate > 0 || !!deliveryTimeline;
   const whatsapp = company.whatsapp;
   const purchasable = product.isPurchasable ?? product.is_purchasable ?? false;
   const waMessage = purchasable
@@ -84,10 +90,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             {product.name}
           </h1>
 
-          <div className="mt-3 flex items-center gap-3">
+          <div className="mt-3 flex items-center gap-3 flex-wrap">
             <p className="text-xl font-black" style={{ color: "var(--accent)" }}>
               {price != null ? formatCurrency(price) : priceNote ?? "Request a quote"}
             </p>
+            {price != null && comparePrice != null && comparePrice > price && (
+              <span className="text-base line-through" style={{ color: "var(--text-muted)" }}>
+                {formatCurrency(comparePrice)}
+              </span>
+            )}
             <span
               className="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide text-white"
               style={{ background: purchasable ? "var(--accent)" : "var(--text-muted)" }}
@@ -95,6 +106,20 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               {purchasable ? "In stock" : "Made to order"}
             </span>
           </div>
+
+          {hasDeliveryInfo && (
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+              {freeDelivery ? (
+                <span className="font-semibold" style={{ color: "var(--accent)" }}>🚚 Free delivery</span>
+              ) : (
+                <>
+                  {deliveryWithinState > 0 && <span>Delivery (within state): {formatCurrency(deliveryWithinState)}</span>}
+                  {deliveryInterstate > 0 && <span>Delivery (outside state): {formatCurrency(deliveryInterstate)}</span>}
+                </>
+              )}
+              {deliveryTimeline && <span>Estimated delivery: {deliveryTimeline}</span>}
+            </div>
+          )}
 
           {product.description && (
             <p className="mt-5 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>

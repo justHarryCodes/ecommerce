@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { uploadImage } from "@/lib/upload-image";
 import { TagInput } from "@/components/dashboard/TagInput";
+import { computePricing } from "@/lib/pricing";
 import type { Category } from "@/types";
 
 const MAX_PRODUCTS = 20;
@@ -27,13 +28,14 @@ interface DraftProduct {
   id: string;
   imageIds: string[];
   name: string;
-  price: string;
+  basePrice: string;
   priceNote: string;
   categoryId: string;
   subcategoryId: string;
   stockQuantity: string;
   isPurchasable: boolean;
   showAdvanced: boolean;
+  freeDelivery: boolean;
   deliveryFeeWithinState: string;
   deliveryFeeInterstate: string;
   deliveryTimeline: string;
@@ -56,13 +58,14 @@ function newSlot(): DraftProduct {
     id: uid(),
     imageIds: [],
     name: "",
-    price: "",
+    basePrice: "",
     priceNote: "",
     categoryId: "",
     subcategoryId: "",
     stockQuantity: "0",
     isPurchasable: false,
     showAdvanced: false,
+    freeDelivery: false,
     deliveryFeeWithinState: "0",
     deliveryFeeInterstate: "0",
     deliveryTimeline: "",
@@ -220,6 +223,11 @@ export default function BulkProductForm({ categories }: { categories: (Category 
       toast.error("Every product needs a name.");
       return;
     }
+    const missingPrice = pendingSlots.find((s) => s.isPurchasable && !s.basePrice);
+    if (missingPrice) {
+      toast.error("Set a base price for every product marked \"Add to Cart\".");
+      return;
+    }
     if (stillUploading) {
       toast.error("Wait for all photos to finish uploading first.");
       return;
@@ -240,7 +248,7 @@ export default function BulkProductForm({ categories }: { categories: (Category 
           .filter((u): u is string => !!u);
         return {
           name: s.name.trim(),
-          price: s.price ? Number(s.price) : undefined,
+          basePrice: s.basePrice ? Number(s.basePrice) : undefined,
           priceNote: s.priceNote || undefined,
           categoryId: s.categoryId || undefined,
           subcategoryId: s.subcategoryId || undefined,
@@ -248,6 +256,7 @@ export default function BulkProductForm({ categories }: { categories: (Category 
           isPurchasable: s.isPurchasable,
           images,
           imageUrl: images[0],
+          freeDelivery: s.freeDelivery,
           deliveryFeeWithinState: Number(s.deliveryFeeWithinState) || 0,
           deliveryFeeInterstate: Number(s.deliveryFeeInterstate) || 0,
           deliveryTimeline: s.deliveryTimeline || undefined,
@@ -471,15 +480,25 @@ export default function BulkProductForm({ categories }: { categories: (Category 
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Price (₦)</label>
+                    <label className={labelClass}>Base price (₦) — your cost</label>
                     <input
                       type="number" min="0" step="0.01"
-                      value={slot.price}
+                      value={slot.basePrice}
                       disabled={!editable}
-                      onChange={(e) => patchSlot(slot.id, { price: e.target.value })}
-                      placeholder="Leave blank to hide"
+                      onChange={(e) => patchSlot(slot.id, { basePrice: e.target.value })}
+                      placeholder="Leave blank for quote-only"
                       className={inputClass}
                     />
+                    {(() => {
+                      const n = Number(slot.basePrice);
+                      if (!slot.basePrice || isNaN(n) || n <= 0) return null;
+                      const { price, comparePrice } = computePricing(n);
+                      return (
+                        <p className="text-[11px] text-surface-400 mt-1">
+                          Sale ₦{price.toLocaleString()} · Compare ₦{comparePrice.toLocaleString()}
+                        </p>
+                      );
+                    })()}
                   </div>
                   <div>
                     <label className={labelClass}>Price note</label>
@@ -561,14 +580,28 @@ export default function BulkProductForm({ categories }: { categories: (Category 
                         className={inputClass}
                       />
                     </div>
+                    <div className="sm:col-span-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={slot.freeDelivery}
+                          disabled={!editable}
+                          onChange={(e) => patchSlot(slot.id, { freeDelivery: e.target.checked })}
+                          className="w-4 h-4 rounded accent-amber-400"
+                        />
+                        <span className="text-xs font-medium text-surface-700 dark:text-surface-300">
+                          Offer free delivery for this product
+                        </span>
+                      </label>
+                    </div>
                     <div>
                       <label className={labelClass}>Delivery — within state (₦)</label>
                       <input
                         type="number" min="0" step="0.01"
                         value={slot.deliveryFeeWithinState}
-                        disabled={!editable}
+                        disabled={!editable || slot.freeDelivery}
                         onChange={(e) => patchSlot(slot.id, { deliveryFeeWithinState: e.target.value })}
-                        className={inputClass}
+                        className={inputClass + (slot.freeDelivery ? " opacity-50" : "")}
                       />
                     </div>
                     <div>
@@ -576,9 +609,9 @@ export default function BulkProductForm({ categories }: { categories: (Category 
                       <input
                         type="number" min="0" step="0.01"
                         value={slot.deliveryFeeInterstate}
-                        disabled={!editable}
+                        disabled={!editable || slot.freeDelivery}
                         onChange={(e) => patchSlot(slot.id, { deliveryFeeInterstate: e.target.value })}
-                        className={inputClass}
+                        className={inputClass + (slot.freeDelivery ? " opacity-50" : "")}
                       />
                     </div>
                     <div className="sm:col-span-2 flex flex-wrap gap-4 pt-1">

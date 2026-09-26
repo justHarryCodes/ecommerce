@@ -24,13 +24,17 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const { serviceId } = await params
   const body = await req.json()
-  const allowed = ['name', 'short_description', 'description', 'icon', 'image_url',
+  const allowed = ['name', 'short_description', 'description', 'icon', 'image_url', 'images',
     'benefits', 'related_product_ids', 'is_active', 'sort_order']
   const sets: string[] = []; const vals: unknown[] = []; let i = 1
 
   for (const [key, val] of Object.entries(body)) {
     const col = key.replace(/([A-Z])/g, c => `_${c.toLowerCase()}`)
-    if (allowed.includes(col)) { sets.push(`${col}=$${i++}`); vals.push(val) }
+    if (!allowed.includes(col)) continue
+    if (col === 'images' && (!Array.isArray(val) || val.length > 3)) {
+      return NextResponse.json({ error: 'Up to 3 images allowed' }, { status: 422 })
+    }
+    sets.push(`${col}=$${i++}`); vals.push(val)
   }
   if (!sets.length) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
   sets.push(`updated_at = NOW()`)

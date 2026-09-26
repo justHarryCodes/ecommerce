@@ -24,6 +24,8 @@ export default function ProductCard({ product }: Props) {
   const imageUrl = images[0] ?? product.image_url ?? null;
   const priceNote = product.price_note ?? product.priceNote;
   const price = product.price;
+  const comparePrice = product.comparePrice ?? product.compare_price;
+  const freeDelivery = product.freeDelivery ?? product.free_delivery ?? false;
   const purchasable = product.isPurchasable ?? product.is_purchasable ?? false;
   const stockQty = product.stockQuantity ?? product.stock_quantity ?? 0;
   const outOfStock = purchasable && stockQty <= 0;
@@ -87,11 +89,21 @@ export default function ProductCard({ product }: Props) {
           {product.name}
         </p>
 
-        <div className="flex items-baseline gap-1.5 mt-0.5">
+        <div className="flex items-baseline gap-1.5 mt-0.5 flex-wrap">
           <span className="font-black text-[15px]" style={{ color: "var(--accent)" }}>
             {price != null ? formatCurrency(price) : priceNote ?? "Request a quote"}
           </span>
+          {price != null && comparePrice != null && comparePrice > price && (
+            <span className="text-xs line-through text-surface-400 dark:text-surface-500">
+              {formatCurrency(comparePrice)}
+            </span>
+          )}
         </div>
+        {freeDelivery && (
+          <span className="text-[11px] font-semibold" style={{ color: "var(--accent)" }}>
+            🚚 Free delivery
+          </span>
+        )}
 
         {purchasable ? (
           <button

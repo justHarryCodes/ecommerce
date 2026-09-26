@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySession, getUserStore, requireSubscription } from '@/lib/auth'
 import { query, queryOne, toCamel } from '@/lib/db'
 import { cacheDelPattern } from '@/lib/redis'
+import { computePricing } from '@/lib/pricing'
 
 type Params = { params: Promise<{ productId: string }> }
 
@@ -32,9 +33,23 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (subErr) return subErr
 
     const { productId } = await params
-    const body = await req.json()
-    const allowed = ['name', 'description', 'short_description', 'price', 'price_note', 'compare_price',
-      'delivery_fee_within_state', 'delivery_fee_interstate', 'delivery_timeline',
+    const body: Record<string, unknown> = await req.json()
+
+    // Same authoritative overrides as createProduct(): a basePrice always
+    // recomputes price/comparePrice, and freeDelivery always zeroes the fee
+    // fields — never trust client-sent values for these alongside them.
+    if (typeof body.basePrice === 'number') {
+      const { price, comparePrice } = computePricing(body.basePrice)
+      body.price = price
+      body.comparePrice = comparePrice
+    }
+    if (body.freeDelivery === true) {
+      body.deliveryFeeWithinState = 0
+      body.deliveryFeeInterstate = 0
+    }
+
+    const allowed = ['name', 'description', 'short_description', 'base_price', 'price', 'price_note', 'compare_price',
+      'free_delivery', 'delivery_fee_within_state', 'delivery_fee_interstate', 'delivery_timeline',
       'stock_quantity', 'category_id', 'subcategory_id', 'image_url', 'images', 'is_active',
       'is_featured', 'is_top_selling', 'is_sponsored', 'is_purchasable', 'sort_order',
       'size_options', 'material_options', 'color_options']

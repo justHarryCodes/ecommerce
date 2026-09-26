@@ -8,9 +8,16 @@ export const ProductInputSchema = z.object({
   name:             z.string().min(1).max(200),
   description:      z.string().max(5000).optional(),
   shortDescription: z.string().max(300).optional(),
+  // basePrice is what the admin actually enters (her cost) — price and
+  // comparePrice are derived from it server-side (src/lib/pricing.ts) and
+  // never trusted from the client. Both are still accepted here so a
+  // product can be created/edited without a basePrice at all (e.g. an
+  // older product, or a quote-only item using priceNote instead).
+  basePrice:        z.number().min(0).optional(),
   price:            z.number().min(0).optional(),
   priceNote:        z.string().max(100).optional(),
   comparePrice:     z.number().min(0).optional(),
+  freeDelivery:     z.boolean().default(false),
   deliveryFeeWithinState: z.number().min(0).default(0),
   deliveryFeeInterstate:  z.number().min(0).default(0),
   deliveryTimeline:       z.string().max(120).optional(),

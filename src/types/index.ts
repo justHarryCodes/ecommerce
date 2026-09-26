@@ -119,9 +119,17 @@ export interface Product {
   compare_price?: number
   priceNote?: string
   price_note?: string
+  // What the admin actually enters — price/comparePrice above are derived
+  // from this server-side (+20%/+30%, src/lib/pricing.ts). Kept so editing
+  // a product later doesn't need to reverse the markup back out.
+  basePrice?: number
+  base_price?: number
   // Zone-based delivery fees for this specific product — some items cost
   // more to deliver than others (e.g. bulky furniture vs. small fittings),
   // and interstate delivery usually costs more than within the state.
+  // Ignored (always $0) when freeDelivery is set.
+  freeDelivery?: boolean
+  free_delivery?: boolean
   deliveryFeeWithinState?: number
   delivery_fee_within_state?: number
   deliveryFeeInterstate?: number
@@ -183,6 +191,9 @@ export interface Service {
   icon?: string
   imageUrl?: string
   image_url?: string
+  // Up to 3 sample images — imageUrl/image_url is kept for older services
+  // and as a convenience alias for images[0].
+  images?: string[]
   benefits?: string[]
   relatedProductIds?: string[]
   related_product_ids?: string[]

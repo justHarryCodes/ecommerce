@@ -10,19 +10,20 @@ import { Loader2, X, ImageIcon } from "lucide-react";
 import type { Category, Product } from "@/types";
 import { TagInput } from "@/components/dashboard/TagInput";
 import { uploadImage } from "@/lib/upload-image";
+import { computePricing } from "@/lib/pricing";
 
 const MAX_IMAGES = 3;
 
 const schema = z.object({
   name: z.string().min(2, "Product name is required"),
   description: z.string().optional(),
-  // Price is optional — the catalog can show a fixed price, a "from ₦X"
-  // note (priceNote), or neither ("Request a quote"). Kept as a plain
+  // What you actually enter is your cost — the sale price and compare
+  // ("was") price are calculated from it automatically. Kept as a plain
   // string here (empty string allowed) and converted to a number — or
   // omitted entirely — in onSubmit, to avoid z.coerce turning "" into 0.
-  price: z.string().optional(),
+  basePrice: z.string().optional(),
   priceNote: z.string().max(100).optional(),
-  comparePrice: z.coerce.number().optional(),
+  freeDelivery: z.boolean().default(false).optional(),
   deliveryFeeWithinState: z.coerce.number().min(0, "Delivery fee cannot be negative").optional(),
   deliveryFeeInterstate: z.coerce.number().min(0, "Delivery fee cannot be negative").optional(),
   deliveryTimeline: z.string().max(120).optional(),
@@ -65,14 +66,14 @@ export default function ProductForm({ categories, product }: Props) {
     ? categories.filter((c) => c.parent_id === selectedCatId)
     : [];
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: product?.name ?? "",
       description: product?.description ?? "",
-      price: product?.price != null ? String(product.price) : "",
+      basePrice: product?.base_price != null ? String(product.base_price) : "",
       priceNote: product?.price_note ?? "",
-      comparePrice: product?.compare_price ?? undefined,
+      freeDelivery: product?.free_delivery ?? false,
       deliveryFeeWithinState: product?.delivery_fee_within_state ?? 0,
       deliveryFeeInterstate: product?.delivery_fee_interstate ?? 0,
       deliveryTimeline: product?.delivery_timeline ?? "",
@@ -110,8 +111,14 @@ export default function ProductForm({ categories, product }: Props) {
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
+  const basePriceStr = watch("basePrice");
+  const freeDelivery = watch("freeDelivery");
+  const basePriceNum = basePriceStr ? Number(basePriceStr) : NaN;
+  const pricePreview = !isNaN(basePriceNum) && basePriceNum > 0 ? computePricing(basePriceNum) : null;
+  const willHavePrice = !!pricePreview || product?.price != null;
+
   async function onSubmit(data: FormData) {
-    if (data.isPurchasable && !data.price) {
+    if (data.isPurchasable && !willHavePrice) {
       toast.error("Set a price before marking this product as Add to Cart");
       return;
     }
@@ -126,7 +133,7 @@ export default function ProductForm({ categories, product }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          price: data.price ? Number(data.price) : undefined,
+          basePrice: data.basePrice ? Number(data.basePrice) : undefined,
           imageUrl: images[0],
           images,
           categoryId: data.categoryId || undefined,
@@ -224,23 +231,29 @@ export default function ProductForm({ categories, product }: Props) {
           className={inputClass + " resize-none"} placeholder="Describe your product…" />
       </div>
 
-      {/* Price */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-            Price (₦)
-          </label>
-          <input {...register("price")} type="number" step="0.01" min="0"
-            className={inputClass} placeholder="Leave blank to hide price" />
-          {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-            Compare price (₦)
-          </label>
-          <input {...register("comparePrice")} type="number" step="0.01" min="0"
-            className={inputClass} placeholder="Strike-through price" />
-        </div>
+      {/* Base price → auto-calculated sale/compare price */}
+      <div>
+        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+          Base price (₦) — your cost
+        </label>
+        <input {...register("basePrice")} type="number" step="0.01" min="0"
+          className={inputClass} placeholder="Leave blank for a quote-only listing" />
+        {errors.basePrice && <p className="text-red-500 text-xs mt-1">{errors.basePrice.message}</p>}
+        {pricePreview ? (
+          <p className="text-xs text-surface-500 dark:text-surface-400 mt-1.5">
+            Sale price <strong className="text-surface-700 dark:text-surface-200">₦{pricePreview.price.toLocaleString()}</strong>{" "}
+            (+20%) · Compare price <strong className="text-surface-700 dark:text-surface-200">₦{pricePreview.comparePrice.toLocaleString()}</strong> (+30%)
+          </p>
+        ) : product?.price != null ? (
+          <p className="text-xs text-surface-400 mt-1.5">
+            Current sale price ₦{Number(product.price).toLocaleString()}
+            {product.compare_price ? ` · compare price ₦${Number(product.compare_price).toLocaleString()}` : ""} — unchanged unless you enter a base price above.
+          </p>
+        ) : (
+          <p className="text-xs text-surface-400 mt-1.5">
+            The sale price (+20%) and compare/&ldquo;was&rdquo; price (+30%) are calculated from this automatically.
+          </p>
+        )}
       </div>
 
       {/* Price note */}
@@ -258,13 +271,18 @@ export default function ProductForm({ categories, product }: Props) {
       {/* Delivery */}
       <div>
         <p className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">Delivery</p>
+        <label className="flex items-center gap-3 cursor-pointer mb-3">
+          <input {...register("freeDelivery")} type="checkbox" id="freeDelivery"
+            className="w-4 h-4 rounded accent-amber-400" />
+          <span className="text-sm text-surface-900 dark:text-white">Offer free delivery for this product</span>
+        </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-surface-500 dark:text-surface-400 mb-1.5">
               Within state (₦)
             </label>
             <input {...register("deliveryFeeWithinState")} type="number" step="0.01" min="0"
-              className={inputClass} placeholder="0.00" />
+              disabled={freeDelivery} className={inputClass + (freeDelivery ? " opacity-50" : "")} placeholder="0.00" />
             {errors.deliveryFeeWithinState && <p className="text-red-500 text-xs mt-1">{errors.deliveryFeeWithinState.message}</p>}
           </div>
           <div>
@@ -272,12 +290,12 @@ export default function ProductForm({ categories, product }: Props) {
               Outside state / interstate (₦)
             </label>
             <input {...register("deliveryFeeInterstate")} type="number" step="0.01" min="0"
-              className={inputClass} placeholder="0.00" />
+              disabled={freeDelivery} className={inputClass + (freeDelivery ? " opacity-50" : "")} placeholder="0.00" />
             {errors.deliveryFeeInterstate && <p className="text-red-500 text-xs mt-1">{errors.deliveryFeeInterstate.message}</p>}
           </div>
         </div>
         <p className="text-xs text-surface-400 mt-1.5">
-          Leave both at 0 if delivery is free or quoted separately.
+          {freeDelivery ? "Free delivery is on — the fees above are ignored." : "Leave both at 0 if delivery is free or quoted separately."}
         </p>
         <div className="mt-3">
           <label className="block text-xs font-medium text-surface-500 dark:text-surface-400 mb-1.5">
