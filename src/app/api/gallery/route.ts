@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySession, getUserStore } from '@/lib/auth'
 import { query, rowsToCamel, toCamel } from '@/lib/db'
 import { z } from 'zod'
+import { revalidateSite } from '@/lib/revalidate'
 
 const FILTER_CATEGORIES = ['metal', 'aluminum_glass', 'wood', 'decorative_concrete', 'interior', 'exterior'] as const
 
@@ -43,5 +44,6 @@ export async function POST(req: NextRequest) {
     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *
   `, [store.id, d.title || null, d.mediaType, d.mediaUrl, d.thumbnailUrl || null, d.filterCategory, d.sortOrder])
 
+  revalidateSite()
   return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) }, { status: 201 })
 }

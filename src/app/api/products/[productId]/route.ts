@@ -3,6 +3,7 @@ import { verifySession, getUserStore, requireSubscription } from '@/lib/auth'
 import { query, queryOne, toCamel } from '@/lib/db'
 import { cacheDelPattern } from '@/lib/redis'
 import { computePricing } from '@/lib/pricing'
+import { revalidateSite } from '@/lib/revalidate'
 
 type Params = { params: Promise<{ productId: string }> }
 
@@ -72,6 +73,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     )
     if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     await cacheDelPattern(`products:${store.id}*`)
+    revalidateSite()
     return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) })
   } catch (err) {
     // Always return JSON — an uncaught throw here would otherwise surface
@@ -92,6 +94,7 @@ export async function DELETE(_: NextRequest, { params }: Params) {
     const { productId } = await params
     await query('DELETE FROM products WHERE id=$1 AND store_id=$2', [productId, store.id])
     await cacheDelPattern(`products:${store.id}*`)
+    revalidateSite()
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[products/:id] DELETE error:', err)

@@ -3,6 +3,7 @@ import { verifySession, getUserStore } from '@/lib/auth'
 import { query, queryOne, rowsToCamel, toCamel } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { z } from 'zod'
+import { revalidateSite } from '@/lib/revalidate'
 
 const EMPLOYMENT_TYPES = ['full_time', 'part_time', 'contract', 'internship'] as const
 
@@ -55,5 +56,6 @@ export async function POST(req: NextRequest) {
     d.description || null, d.requirements || null, d.isInternship, d.isActive,
   ])
 
+  revalidateSite()
   return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) }, { status: 201 })
 }

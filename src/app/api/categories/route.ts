@@ -4,6 +4,7 @@ import { query, queryOne, rowsToCamel, toCamel } from "@/lib/db";
 import { cacheDel, CacheKey } from "@/lib/redis";
 import { slugify } from "@/lib/utils";
 import { z } from "zod";
+import { revalidateSite } from "@/lib/revalidate";
 
 const Schema = z.object({
   name: z.string().min(1).max(100),
@@ -69,6 +70,7 @@ export async function POST(req: NextRequest) {
   );
 
   await cacheDel(CacheKey.categories(store.id));
+  revalidateSite();
   return NextResponse.json(
     { data: toCamel(rows[0] as Record<string, unknown>) },
     { status: 201 },

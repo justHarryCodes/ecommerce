@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifySession } from "@/lib/auth";
-import { queryOne, query, toCamel } from "@/lib/db";
+import { verifySession, getUserStore } from "@/lib/auth";
+import { query, toCamel } from "@/lib/db";
 import { cacheDel } from "@/lib/redis";
+import { revalidateSite } from "@/lib/revalidate";
 
 export async function PATCH(req: NextRequest) {
   const user = await verifySession();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Single-company mode: there is only one store, so no id / owner lookup
-  const store = await queryOne<{ id: string; slug: string }>(
-    "SELECT id, slug FROM stores LIMIT 1",
-  );
+  // Admin-only: getUserStore() returns null unless the user is on
+  // ADMIN_EMAILS. Without this, any signed-in customer could change the
+  // store's bank details.
+  const store = await getUserStore(user.firebaseUid);
   if (!store)
     return NextResponse.json({ error: "Store not found" }, { status: 404 });
 
@@ -63,6 +64,7 @@ export async function PATCH(req: NextRequest) {
   );
 
   await cacheDel(`store:${store.slug}`);
+  revalidateSite();
 
   return NextResponse.json({
     data: toCamel(rows[0] as Record<string, unknown>),

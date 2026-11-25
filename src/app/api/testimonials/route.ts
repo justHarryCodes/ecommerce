@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySession, getUserStore } from '@/lib/auth'
 import { query, rowsToCamel, toCamel } from '@/lib/db'
 import { z } from 'zod'
+import { revalidateSite } from '@/lib/revalidate'
 
 const Schema = z.object({
   customerName:  z.string().min(1).max(200),
@@ -42,5 +43,6 @@ export async function POST(req: NextRequest) {
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *
   `, [store.id, d.customerName, d.customerTitle || null, d.quote, d.rating || null, d.photoUrl || null, d.isFeatured, d.sortOrder])
 
+  revalidateSite()
   return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) }, { status: 201 })
 }

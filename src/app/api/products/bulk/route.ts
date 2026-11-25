@@ -4,6 +4,7 @@ import { cacheDelPattern } from '@/lib/redis'
 import { createProduct } from '@/lib/products'
 import { ProductInputSchema } from '@/lib/product-schema'
 import { z } from 'zod'
+import { revalidateSite } from '@/lib/revalidate'
 
 // Keep a batch small enough that one request can't hold the DB connection
 // (or a browser tab's upload state) hostage — a much bigger catalog import
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     await cacheDelPattern(`products:${store.id}*`)
+    revalidateSite()
     return NextResponse.json({ results })
   } catch (err) {
     console.error('[products/bulk] POST error:', err)

@@ -14,6 +14,11 @@ import type { Category } from "@/types";
 // Deliberately does NOT read the session: public pages stay public and
 // static. Who is signed in is resolved client-side by ViewerProvider, which
 // only drives the header's account menu.
+// Safety net: rebuild public pages at most every 60s, so a write that
+// doesn't call revalidateSite() (e.g. stock changing after a checkout)
+// is still picked up quickly. Admin edits purge right away.
+export const revalidate = 60;
+
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const company = await getCompany();
   const categories = company

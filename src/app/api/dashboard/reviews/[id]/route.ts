@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/auth'
 import { queryOne, query } from '@/lib/db'
+import { revalidateSite } from '@/lib/revalidate'
 
 interface RouteParams { params: Promise<{ id: string }> }
 
@@ -16,6 +17,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const { id } = await params
   const { is_approved } = await req.json()
   await query('UPDATE reviews SET is_approved = $1 WHERE id = $2 AND store_id = $3', [is_approved, id, store.id])
+  revalidateSite()
   return NextResponse.json({ success: true })
 }
 
@@ -26,5 +28,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   if (!store) return NextResponse.json({ error: 'Store not found' }, { status: 404 })
   const { id } = await params
   await query('DELETE FROM reviews WHERE id = $1 AND store_id = $2', [id, store.id])
+  revalidateSite()
   return NextResponse.json({ success: true })
 }

@@ -3,6 +3,7 @@ import { verifySession, getUserStore } from '@/lib/auth'
 import { query, queryOne, rowsToCamel, toCamel } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { z } from 'zod'
+import { revalidateSite } from '@/lib/revalidate'
 
 const CATEGORIES = ['residential', 'commercial', 'hotels', 'schools', 'offices', 'restaurants'] as const
 
@@ -57,5 +58,6 @@ export async function POST(req: NextRequest) {
     d.servicesProvided, d.beforeImages, d.afterImages, d.images, d.isFeatured, d.sortOrder,
   ])
 
+  revalidateSite()
   return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) }, { status: 201 })
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySession, getUserStore } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { z } from "zod";
+import { revalidateSite } from "@/lib/revalidate";
 
 const Schema = z.object({
   images: z.array(z.string().url()).max(5),
@@ -23,5 +24,6 @@ export async function PUT(req: NextRequest) {
     [parsed.data.images, store.id]
   );
 
+  revalidateSite();
   return NextResponse.json({ ok: true });
 }

@@ -3,6 +3,7 @@ import { verifySession, getUserStore } from '@/lib/auth'
 import { query, queryOne, rowsToCamel, toCamel } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { z } from 'zod'
+import { revalidateSite } from '@/lib/revalidate'
 
 const Schema = z.object({
   title:       z.string().min(1).max(200),
@@ -51,5 +52,6 @@ export async function POST(req: NextRequest) {
     d.category || null, d.author || null, d.isPublished, d.isPublished ? new Date() : null,
   ])
 
+  revalidateSite()
   return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) }, { status: 201 })
 }

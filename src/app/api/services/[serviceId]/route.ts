@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySession, getUserStore } from '@/lib/auth'
 import { query, queryOne, toCamel } from '@/lib/db'
+import { revalidateSite } from '@/lib/revalidate'
 
 type Params = { params: Promise<{ serviceId: string }> }
 
@@ -44,6 +45,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     `UPDATE services SET ${sets.join(',')} WHERE id=$${i++} AND store_id=$${i} RETURNING *`, vals
   )
   if (!rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  revalidateSite()
   return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) })
 }
 
@@ -55,5 +57,6 @@ export async function DELETE(_: NextRequest, { params }: Params) {
 
   const { serviceId } = await params
   await query('DELETE FROM services WHERE id=$1 AND store_id=$2', [serviceId, store.id])
+  revalidateSite()
   return NextResponse.json({ ok: true })
 }

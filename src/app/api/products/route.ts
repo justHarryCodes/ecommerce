@@ -4,6 +4,7 @@ import { query, rowsToCamel } from '@/lib/db'
 import { cacheDelPattern } from '@/lib/redis'
 import { createProduct } from '@/lib/products'
 import { ProductInputSchema } from '@/lib/product-schema'
+import { revalidateSite } from '@/lib/revalidate'
 
 export async function GET(req: NextRequest) {
   const user = await verifySession()
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
     const product = await createProduct(store.id, parsed.data)
 
     await cacheDelPattern(`products:${store.id}*`)
+    revalidateSite()
     return NextResponse.json({ data: product }, { status: 201 })
   } catch (err) {
     // Always return JSON here — an uncaught throw (e.g. a DB error) would

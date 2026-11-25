@@ -6,6 +6,7 @@ import { query, queryOne, toCamel } from '@/lib/db'
 import { cacheDel, CacheKey } from '@/lib/redis'
 import { slugify } from '@/lib/utils'
 import { z } from 'zod'
+import { revalidateSite } from '@/lib/revalidate'
 
 const Schema = z.object({
   categoryId: z.string().uuid(),   // parent category
@@ -45,5 +46,6 @@ export async function POST(req: NextRequest) {
   )
 
   await cacheDel(CacheKey.categories(store.id))
+  revalidateSite()
   return NextResponse.json({ data: toCamel(rows[0] as Record<string, unknown>) }, { status: 201 })
 }
