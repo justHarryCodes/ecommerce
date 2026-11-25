@@ -40,11 +40,11 @@ export default function ProductCard({ product }: Props) {
 
   return (
     <div
-      className="group relative flex flex-col rounded-2xl border p-2.5 transition-[box-shadow,transform] duration-300 motion-safe:hover:-translate-y-1 hover:shadow-[0_18px_40px_-18px_rgba(23,18,14,0.28)] focus-within:shadow-[0_18px_40px_-18px_rgba(23,18,14,0.28)]"
+      className="group relative flex flex-col border-b border-r p-3 transition-colors duration-200 hover:bg-[var(--bg-secondary)] focus-within:bg-[var(--bg-secondary)]"
       style={{ borderColor: "var(--border)", background: "var(--bg)" }}
     >
       {/* Image well */}
-      <div className="relative aspect-square overflow-hidden rounded-xl" style={{ background: "var(--well)" }}>
+      <div className="relative aspect-square overflow-hidden" style={{ background: "var(--well)" }}>
         {d.image ? (
           <img
             src={clCard(d.image)}
@@ -59,12 +59,12 @@ export default function ProductCard({ product }: Props) {
 
         <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
           {d.discountPct !== null && (
-            <span className="rounded-full px-2 py-0.5 text-[10px] font-extrabold text-white" style={{ background: "var(--accent-dark)" }}>
+            <span className="px-2 py-0.5 text-[10px] font-extrabold text-white" style={{ background: "var(--accent-dark)" }}>
               -{d.discountPct}%
             </span>
           )}
           {!d.purchasable && (
-            <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold" style={{ color: "var(--ink)" }}>
+            <span className="bg-white/90 px-2 py-0.5 text-[10px] font-bold" style={{ color: "var(--ink)" }}>
               Made to order
             </span>
           )}
@@ -72,18 +72,18 @@ export default function ProductCard({ product }: Props) {
 
         {d.outOfStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/45">
-            <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black">Out of stock</span>
+            <span className="bg-white px-3 py-1.5 text-xs font-bold text-black">Out of stock</span>
           </div>
         )}
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col px-1.5 pb-1 pt-3">
+      <div className="flex flex-1 flex-col pt-3">
         <h3 className="text-[13.5px] font-semibold leading-snug line-clamp-2" style={{ color: "var(--text-primary)" }}>
           <Link
             href={href}
             prefetch={false}
-            className="after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-[var(--accent)]"
+            className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-[var(--accent)]"
           >
             {product.name}
           </Link>
@@ -112,7 +112,7 @@ export default function ProductCard({ product }: Props) {
               onClick={handleAddToCart}
               disabled={d.outOfStock}
               aria-label={added ? `${product.name} added to cart` : `Add ${product.name} to cart`}
-              className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors hover:bg-[var(--well)] disabled:cursor-not-allowed disabled:opacity-40 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1"
+              className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center border transition-colors hover:bg-[var(--well)] disabled:cursor-not-allowed disabled:opacity-40 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1"
               style={
                 added
                   ? { background: "#059669", borderColor: "#059669", color: "#fff" }
@@ -124,7 +124,7 @@ export default function ProductCard({ product }: Props) {
           ) : (
             <span
               aria-hidden="true"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors group-hover:bg-[var(--ink)] group-hover:text-white"
+              className="flex h-10 w-10 shrink-0 items-center justify-center border transition-colors group-hover:bg-[var(--ink)] group-hover:text-white"
               style={{ borderColor: "var(--border)", color: "var(--text-primary)" }}
             >
               <ArrowUpRight className="h-4 w-4" />

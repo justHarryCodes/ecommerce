@@ -4,6 +4,7 @@ import { getCompany } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import ProductCard from "@/components/storefront/ProductCard";
+import { PRODUCT_GRID } from "@/lib/product-display";
 import { EmptyState } from "@/components/ui/EmptyState";
 import PageHero from "@/components/storefront/PageHero";
 import type { Product, Category } from "@/types";
@@ -278,7 +279,7 @@ export default async function ProductsPage({
               description="Try a different category or filter, or get in touch for a custom quote."
             />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            <div className={`${PRODUCT_GRID} grid-cols-2 sm:grid-cols-3 xl:grid-cols-4`}>
               {products.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

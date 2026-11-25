@@ -14,7 +14,7 @@ import { getCompany } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { clCard } from "@/lib/cloudinary";
 import { waLink } from "@/lib/utils";
-import { productDisplay } from "@/lib/product-display";
+import { productDisplay, PRODUCT_GRID } from "@/lib/product-display";
 import { PROMO_TILES } from "@/lib/site-content";
 import ProductCard from "@/components/storefront/ProductCard";
 import QuoteRequestButton from "@/components/storefront/QuoteRequestButton";
@@ -57,7 +57,7 @@ function ProductRow({ title, subtitle, products: all }: { title: string; subtitl
   return (
     <section className={`${container} py-10`}>
       <SectionHeader title={title} subtitle={subtitle} href="/products" linkLabel="View all products" />
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className={`${PRODUCT_GRID} grid-cols-2 sm:grid-cols-3 lg:grid-cols-5`}>
         {products.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
@@ -140,7 +140,8 @@ export default async function HomePage() {
       </h1>
 
       {/* Hero */}
-      <section className={`${container} pt-4 sm:pt-6`}>
+      {/* Full-bleed: no container, no rounding — edge to edge. */}
+      <section>
         <HeroCarousel products={heroProducts} />
       </section>
 
@@ -148,17 +149,19 @@ export default async function HomePage() {
       {categories.length > 0 && (
         <section className={`${container} pt-12 pb-4`}>
           <SectionHeader title="Shop by category" href="/products" linkLabel="All products" />
-          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 snap-x sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
+          {/* Round "menu" tiles — each 10px smaller than the old square
+              tiles' height at that breakpoint (164→154, 126→116, 219→209). */}
+          <ul className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-2 snap-x sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-8 sm:overflow-visible sm:px-0 lg:gap-12">
             {categories.map((c) => {
               const Icon = CATEGORY_ICONS[c.slug] ?? Package;
               return (
+                <li key={c.id} className="shrink-0 snap-start">
                 <Link
-                  key={c.id}
                   href={`/products?category=${c.slug}`}
-                  className="group w-[42%] shrink-0 snap-start sm:w-auto focus-visible:outline-none"
+                  className="group flex w-[154px] flex-col items-center sm:w-[116px] lg:w-[209px] focus-visible:outline-none"
                 >
                   <div
-                    className="relative aspect-square sm:aspect-[4/3] overflow-hidden rounded-2xl transition-shadow group-hover:shadow-lg group-focus-visible:ring-2 group-focus-visible:ring-[var(--accent)] group-focus-visible:ring-offset-2"
+                    className="relative aspect-square w-full overflow-hidden rounded-full border-2 border-transparent transition-[border-color,box-shadow] group-hover:border-[var(--accent)] group-hover:shadow-lg group-focus-visible:ring-2 group-focus-visible:ring-[var(--accent)] group-focus-visible:ring-offset-2"
                     style={{ background: "var(--well)" }}
                   >
                     {c.cover ? (
@@ -174,13 +177,14 @@ export default async function HomePage() {
                       </div>
                     )}
                   </div>
-                  <p className="mt-2.5 text-center text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                  <p className="mt-3 text-center text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                     {c.name}
                   </p>
                 </Link>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </section>
       )}
 

@@ -4,6 +4,7 @@ import { ChevronRight, Check } from "lucide-react";
 import { getCompany } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import ProductCard from "@/components/storefront/ProductCard";
+import { PRODUCT_GRID } from "@/lib/product-display";
 import ServiceGallery from "@/components/storefront/ServiceGallery";
 import QuoteRequestButton from "@/components/storefront/QuoteRequestButton";
 import type { Service, Product } from "@/types";
@@ -88,7 +89,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
           <h2 className="text-xl font-black mb-6" style={{ color: "var(--text-primary)" }}>
             Related Products
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className={`${PRODUCT_GRID} grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`}>
             {relatedProducts.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

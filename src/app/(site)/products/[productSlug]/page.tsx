@@ -4,7 +4,7 @@ import { ChevronRight, Truck, Clock, ShieldCheck, Lock, Wrench, MessageCircle, C
 import { getCompany } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { formatCurrency, waLink } from "@/lib/utils";
-import { productDisplay, toNum } from "@/lib/product-display";
+import { productDisplay, toNum, PRODUCT_GRID } from "@/lib/product-display";
 import ProductGallery from "@/components/storefront/ProductGallery";
 import ProductCard from "@/components/storefront/ProductCard";
 import QuoteRequestButton from "@/components/storefront/QuoteRequestButton";
@@ -243,7 +243,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         {relatedProducts.length > 0 && (
           <section className="mt-14">
             <SectionHeader title="You may also like" href="/products" linkLabel="View all products" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className={`${PRODUCT_GRID} grid-cols-2 sm:grid-cols-3 lg:grid-cols-5`}>
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

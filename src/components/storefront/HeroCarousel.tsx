@@ -78,7 +78,7 @@ export default function HeroCarousel({ products }: { products: HeroProductSlide[
       role="region"
       aria-roledescription="carousel"
       aria-label="Highlights"
-      className="relative overflow-hidden rounded-[28px]"
+      className="relative overflow-hidden"
       style={{ background: "var(--well)" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -128,7 +128,10 @@ export default function HeroCarousel({ products }: { products: HeroProductSlide[
 
       {/* Controls */}
       {count > 1 && (
-        <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-10 flex items-center gap-2 rounded-full bg-black/35 p-1.5 backdrop-blur-md">
+        // Full-bleed hero: controls align to the page container's right edge.
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 sm:bottom-6 z-10">
+        <div className="max-w-7xl mx-auto flex justify-end px-4 sm:px-6 lg:px-8">
+        <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/35 p-1.5 backdrop-blur-md">
           <button
             type="button"
             onClick={() => go(active - 1)}
@@ -176,6 +179,8 @@ export default function HeroCarousel({ products }: { products: HeroProductSlide[
             </button>
           )}
         </div>
+        </div>
+        </div>
       )}
     </div>
   );
@@ -186,14 +191,15 @@ function ProductSlide({ product: p, eager }: { product: HeroProductSlide; eager:
   const href = `/products/${p.slug}`;
   return (
     <div
-      className="grid h-full items-center gap-6 lg:grid-cols-[1.05fr_1fr] pb-20 lg:pb-0"
+      className="h-full"
       style={{
         background:
           "radial-gradient(90% 120% at 100% 0%, rgba(181,98,42,0.16) 0%, transparent 55%), linear-gradient(135deg, var(--well) 0%, var(--well-strong) 100%)",
       }}
     >
+      <div className="max-w-7xl mx-auto grid h-full items-center gap-6 px-4 pb-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:px-8 lg:pb-0">
       {/* Photo first on mobile */}
-      <div className="relative order-1 lg:order-2 px-4 pt-4 sm:px-8 sm:pt-8 lg:p-10 lg:pl-0">
+      <div className="relative order-1 lg:order-2 pt-4 sm:pt-8 lg:py-12">
         <div className="relative mx-auto aspect-[4/3] w-full max-w-xl overflow-hidden rounded-3xl shadow-[0_30px_60px_-20px_rgba(23,18,14,0.45)] lg:aspect-[1/0.92]">
           <img
             src={heroImg(p.image)}
@@ -219,7 +225,7 @@ function ProductSlide({ product: p, eager }: { product: HeroProductSlide; eager:
         </div>
       </div>
 
-      <div className="order-2 lg:order-1 px-6 sm:px-10 lg:py-14 lg:pl-14">
+      <div className="order-2 lg:order-1 sm:px-2 lg:px-0 lg:py-14">
         <p
           className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em]"
           style={{ background: "rgba(124,63,22,0.10)", color: "var(--accent-dark)" }}
@@ -264,6 +270,7 @@ function ProductSlide({ product: p, eager }: { product: HeroProductSlide; eager:
           </Link>
         </div>
       </div>
+      </div>
     </div>
   );
 }
@@ -272,10 +279,8 @@ function ProductSlide({ product: p, eager }: { product: HeroProductSlide; eager:
 function PromoSlide({ promo }: { promo: PromoBanner }) {
   const t = TONES[promo.tone];
   return (
-    <div
-      className="flex h-full min-h-[440px] items-end md:items-center justify-between gap-8 px-6 pt-12 pb-24 sm:px-10 lg:px-14 lg:py-14"
-      style={{ background: t.background, color: t.fg }}
-    >
+    <div className="h-full" style={{ background: t.background, color: t.fg }}>
+      <div className="max-w-7xl mx-auto flex h-full min-h-[440px] items-end md:items-center justify-between gap-8 px-4 pt-12 pb-24 sm:px-8 lg:px-8 lg:py-14">
       <div className="max-w-xl">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: t.eyebrow }}>
           {promo.eyebrow}
@@ -295,6 +300,7 @@ function PromoSlide({ promo }: { promo: PromoBanner }) {
         </Link>
       </div>
       <IconArt icons={promo.icons} tone={promo.tone} size="lg" className="hidden md:block" />
+      </div>
     </div>
   );
 }

@@ -45,3 +45,11 @@ export function productDisplay(p: Product): ProductDisplay {
     shortDescription: p.short_description ?? p.shortDescription ?? null,
   };
 }
+
+// Shared product-grid layout: square cards separated by 1px hairlines.
+// The grid draws the outer top/left edge and each card draws its own
+// right/bottom edge, so an incomplete last row still looks clean.
+// (Lives here, not in ProductCard.tsx — values exported from a "use client"
+// module can't be read as plain strings by server components.)
+export const PRODUCT_GRID =
+  "grid border-l border-t [border-color:var(--border)]";
