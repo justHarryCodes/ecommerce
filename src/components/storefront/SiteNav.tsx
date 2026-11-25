@@ -8,6 +8,7 @@ import { useCart } from "./CartProvider";
 import CartDrawer from "./CartDrawer";
 import NavDropdown, { type NavDropdownItem } from "./NavDropdown";
 import SearchBar from "./SearchBar";
+import AnnouncementBar from "./AnnouncementBar";
 import { AccountDropdown, MobileAccountGroup } from "./AccountMenu";
 import type { Store, Category } from "@/types";
 
@@ -85,22 +86,24 @@ export default function SiteNav({ company, categories }: Props) {
 
   return (
     <>
+      <AnnouncementBar />
       <nav
-        className="sticky top-0 z-50 border-b backdrop-blur-sm transition-shadow"
+        className="sticky top-0 z-50 border-b backdrop-blur-md transition-shadow"
         style={{
-          background: "var(--bg)",
+          background: "rgba(255,255,255,0.92)",
           borderColor: "var(--border)",
           boxShadow: scrolled ? "0 2px 12px rgba(0,0,0,0.08)" : "none",
         }}
       >
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
+          <div className="flex items-center justify-between h-[68px] gap-4">
             <Link href="/" className="shrink-0 flex items-center gap-2">
               {logoUrl ? (
                 <img src={clLogo(logoUrl)} alt={companyName} className="h-9 w-auto object-contain" />
               ) : (
-                <span className="text-lg font-black tracking-tight" style={{ color: "var(--text-primary)" }}>
+                <span className="text-xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
                   {companyName}
+                  <span style={{ color: "var(--accent)" }} aria-hidden="true">.</span>
                 </span>
               )}
             </Link>
@@ -123,8 +126,8 @@ export default function SiteNav({ company, categories }: Props) {
               <CartButton onClick={() => setCartOpen(true)} className="hover:bg-black/5 dark:hover:bg-white/5" />
               <Link
                 href="/contact"
-                className="ml-2 text-sm font-semibold px-4 py-2 rounded-lg text-white transition-opacity hover:opacity-90 whitespace-nowrap"
-                style={{ background: "var(--accent)" }}
+                className="ml-2 text-sm font-bold px-5 py-2.5 rounded-full transition-opacity hover:opacity-90 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                style={{ background: "var(--ink)", color: "var(--ink-foreground)" }}
               >
                 Get a Free Quote
               </Link>
@@ -168,8 +171,8 @@ export default function SiteNav({ company, categories }: Props) {
               <Link
                 href="/contact"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-center px-4 py-3.5 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
-                style={{ background: "var(--accent)" }}
+                className="flex items-center justify-center px-4 py-3.5 rounded-full text-sm font-bold transition-opacity hover:opacity-90"
+                style={{ background: "var(--ink)", color: "var(--ink-foreground)" }}
               >
                 Get a Free Quote
               </Link>

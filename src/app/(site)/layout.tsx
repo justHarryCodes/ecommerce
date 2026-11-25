@@ -34,7 +34,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <div className="storefront flex min-h-screen flex-col">
           <SiteNav company={company} categories={categories} />
           <main className="flex-1">{children}</main>
-          <SiteFooter company={company} />
+          <SiteFooter company={company} categories={categories} />
           <WhatsAppButton company={company} />
         </div>
       </CartProvider>

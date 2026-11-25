@@ -3,27 +3,27 @@ import {
   ArrowRight,
   MapPin,
   Star,
-  ChevronRight,
-  Info,
-  Wrench,
-  Briefcase,
-  Image as ImageIcon,
-  Newspaper,
-  UserPlus,
   Hammer,
   Layers,
   TreePine,
   Package,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 import { getCompany } from "@/lib/auth";
 import { query } from "@/lib/db";
-import { getHeroCollageImages } from "@/lib/hero-images";
 import { clCard } from "@/lib/cloudinary";
+import { waLink } from "@/lib/utils";
+import { productDisplay } from "@/lib/product-display";
+import { PROMO_TILES } from "@/lib/site-content";
 import ProductCard from "@/components/storefront/ProductCard";
 import QuoteRequestButton from "@/components/storefront/QuoteRequestButton";
-import { WHY_CHOOSE_US } from "@/lib/site-content";
-import type { Product, Project, Testimonial, ProjectCategory, Category } from "@/types";
+import HeroCarousel, { type HeroProductSlide } from "@/components/storefront/HeroCarousel";
+import SpotlightBanner from "@/components/storefront/SpotlightBanner";
+import PromoTile from "@/components/storefront/PromoTile";
+import SectionHeader from "@/components/storefront/SectionHeader";
+import FeatureStrip from "@/components/storefront/FeatureStrip";
+import type { Product, Project, Testimonial, ProjectCategory } from "@/types";
 
 const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   residential: "Residential",
@@ -34,21 +34,6 @@ const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   restaurants: "Restaurants",
 };
 
-// Quick-nav tiles flanking the hero (desktop: 3 left + 3 right; mobile: one
-// horizontal-scroll row below the hero). Products/Contact are deliberately
-// left out — Products is the page's own focus just below, and Contact
-// already has the hero's CTA button.
-const NAV_TILES: { href: string; label: string; desc: string; icon: LucideIcon }[] = [
-  { href: "/about", label: "About Us", desc: "Our story & mission", icon: Info },
-  { href: "/services", label: "Services", desc: "What we do", icon: Wrench },
-  { href: "/projects", label: "Projects", desc: "Our portfolio", icon: Briefcase },
-  { href: "/gallery", label: "Gallery", desc: "Photos & videos", icon: ImageIcon },
-  { href: "/blog", label: "Blog", desc: "Tips & insights", icon: Newspaper },
-  { href: "/careers", label: "Careers", desc: "Join our team", icon: UserPlus },
-];
-const leftTiles = NAV_TILES.slice(0, 3);
-const rightTiles = NAV_TILES.slice(3, 6);
-
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "metal-products": Hammer,
   "aluminum-glass": Layers,
@@ -56,147 +41,142 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "decorative-concrete": Package,
 };
 
-// Shared markup for the three admin-curated homepage product placements —
-// Sponsored, Featured, Top Selling all render identically, just fed by a
-// different `is_*` flag on the product (checked in the dashboard product
-// form under "Homepage placement").
-function ProductRow({ title, products, alt = false }: { title: string; products: Product[]; alt?: boolean }) {
-  if (products.length === 0) return null;
+const HAS_IMAGE = `(cardinality(p.images) > 0 OR p.image_url IS NOT NULL)`;
+
+type CategoryTile = { id: string; name: string; slug: string; cover: string | null };
+type ProductWithCategory = Product & { category_name?: string | null };
+
+const container = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8";
+
+// Admin-curated product row (Featured / Top selling / Sponsored flags are
+// ticked per product in the dashboard under "Homepage placement").
+function ProductRow({ title, subtitle, products: all }: { title: string; subtitle?: string; products: Product[] }) {
+  if (all.length === 0) return null;
+  // Desktop shows 5 per row — trim to full rows so no lone card dangles.
+  const products = all.length > 5 ? all.slice(0, Math.floor(all.length / 5) * 5) : all;
   return (
-    <section className="py-12" style={alt ? { background: "var(--bg-secondary)" } : undefined}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between mb-8">
-          <h2 className="text-xl sm:text-2xl font-black" style={{ color: "var(--text-primary)" }}>{title}</h2>
-          <Link href="/products" className="text-sm font-semibold shrink-0" style={{ color: "var(--accent)" }}>Shop all →</Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+    <section className={`${container} py-10`}>
+      <SectionHeader title={title} subtitle={subtitle} href="/products" linkLabel="View all products" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        {products.map((p) => (
+          <ProductCard key={p.id} product={p} />
+        ))}
       </div>
     </section>
   );
 }
 
-function NavTile({ href, label, desc, icon: Icon, className = "" }: {
-  href: string; label: string; desc: string; icon: LucideIcon; className?: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10 ${className}`}
-    >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: "var(--accent)" }}>
-        <Icon className="h-5 w-5 text-white" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-white truncate">{label}</p>
-        <p className="text-xs text-white/60 truncate">{desc}</p>
-      </div>
-      <ChevronRight className="h-4 w-4 text-white/40 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-    </Link>
-  );
-}
-
 export default async function HomePage() {
   const company = await getCompany();
+  const storeId = company?.id;
 
-  const [categories, featuredProducts, topSellingProducts, sponsoredProducts, featuredProjects, testimonials, heroImages] = company
-    ? await Promise.all([
-        query<Category>(`SELECT * FROM categories WHERE store_id = $1 AND parent_id IS NULL ORDER BY sort_order, name`, [company.id]),
-        query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_featured = true ORDER BY sort_order LIMIT 8`, [company.id]),
-        query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_top_selling = true ORDER BY sort_order LIMIT 8`, [company.id]),
-        query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_sponsored = true ORDER BY sort_order LIMIT 8`, [company.id]),
-        query<Project>(`SELECT * FROM projects WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 3`, [company.id]),
-        query<Testimonial>(`SELECT * FROM testimonials WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 6`, [company.id]),
-        getHeroCollageImages(8),
-      ])
-    : [[], [], [], [], [], [], []];
+  const [categories, heroRows, featured, topSelling, sponsored, spotlightCandidates, featuredProjects, testimonials] =
+    storeId
+      ? await Promise.all([
+          query<CategoryTile>(
+            `SELECT c.id, c.name, c.slug,
+               (SELECT COALESCE(p.images[1], p.image_url) FROM products p
+                 WHERE p.store_id = c.store_id AND p.is_active = true
+                   AND (p.category_id = c.id OR p.subcategory_id = c.id) AND ${HAS_IMAGE}
+                 ORDER BY p.is_featured DESC, p.sort_order LIMIT 1) AS cover
+             FROM categories c
+             WHERE c.store_id = $1 AND c.parent_id IS NULL
+             ORDER BY c.sort_order, c.name`,
+            [storeId]
+          ),
+          query<ProductWithCategory>(
+            `SELECT p.*, c.name AS category_name FROM products p
+             LEFT JOIN categories c ON c.id = p.category_id
+             WHERE p.store_id = $1 AND p.is_active = true AND (p.is_sponsored OR p.is_featured) AND ${HAS_IMAGE}
+             ORDER BY p.is_sponsored DESC, p.sort_order LIMIT 3`,
+            [storeId]
+          ),
+          query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_featured = true ORDER BY sort_order LIMIT 10`, [storeId]),
+          query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_top_selling = true ORDER BY sort_order LIMIT 10`, [storeId]),
+          query<Product>(`SELECT * FROM products WHERE store_id = $1 AND is_active = true AND is_sponsored = true ORDER BY sort_order LIMIT 10`, [storeId]),
+          // Spotlight: the curated product with the biggest real saving.
+          query<Product>(
+            `SELECT p.* FROM products p
+             WHERE p.store_id = $1 AND p.is_active = true AND ${HAS_IMAGE}
+               AND (p.is_sponsored OR p.is_featured OR p.is_top_selling)
+             ORDER BY CASE WHEN p.compare_price > p.price AND p.compare_price > 0
+                           THEN (p.compare_price - p.price) / p.compare_price END DESC NULLS LAST,
+                      p.is_sponsored DESC, p.sort_order
+             LIMIT 6`,
+            [storeId]
+          ),
+          query<Project>(`SELECT * FROM projects WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 3`, [storeId]),
+          query<Testimonial>(`SELECT * FROM testimonials WHERE store_id = $1 AND is_featured = true ORDER BY sort_order LIMIT 3`, [storeId]),
+        ])
+      : [[], [], [], [], [], [], [], []];
 
-  const heroCollage = heroImages.length > 0
-    ? Array.from({ length: 8 }, (_, i) => heroImages[i % heroImages.length])
-    : [];
+  const heroProducts: HeroProductSlide[] = heroRows.map((p) => {
+    const d = productDisplay(p);
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      image: d.image as string,
+      category: p.category_name ?? null,
+      caption: d.shortDescription,
+      price: d.price,
+      comparePrice: d.comparePrice,
+      discountPct: d.discountPct,
+      priceNote: d.priceNote,
+      purchasable: d.purchasable,
+    };
+  });
 
-  // Minimal, centered — just the headline and the two CTAs.
-  const heroContent = (
-    <div className="text-center px-2">
-      <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-        Design. Fabricate. Build.
-      </h1>
-      <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
-        <QuoteRequestButton sourceType="general" label="Get a Free Quote" size="lg" />
-        <Link
-          href="/projects"
-          className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-base font-semibold border border-white/25 text-white transition-colors hover:bg-white/10"
-        >
-          View Our Projects <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-    </div>
-  );
+  // Prefer a spotlight product that isn't already a hero slide.
+  const heroIds = new Set(heroRows.map((p) => p.id));
+  const spotlight = spotlightCandidates.find((p) => !heroIds.has(p.id)) ?? spotlightCandidates[0] ?? null;
+
+  const whatsapp = company?.whatsapp;
 
   return (
-    <div>
-      {/* Hero + quick-nav tiles — photo-collage background, minimal centered text */}
-      <section className="relative overflow-hidden min-h-[420px] sm:min-h-[480px] flex items-center" style={{ background: "#1a1410" }}>
-        {heroCollage.length > 0 && (
-          <div className="absolute inset-0 grid grid-cols-4 sm:grid-cols-8 gap-0.5">
-            {heroCollage.map((img, i) => (
-              <div key={i} className="relative overflow-hidden">
-                <img src={clCard(img)} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-        )}
-        <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(180deg, rgba(20,15,10,0.72) 0%, rgba(20,15,10,0.82) 100%)" }}
-        />
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
-          {/* Desktop: 3-column layout — tiles flank the hero */}
-          <div className="hidden lg:grid grid-cols-[240px_1fr_240px] gap-8 items-center">
-            <div className="flex flex-col gap-4">
-              {leftTiles.map((t) => <NavTile key={t.href} {...t} />)}
-            </div>
-            {heroContent}
-            <div className="flex flex-col gap-4">
-              {rightTiles.map((t) => <NavTile key={t.href} {...t} />)}
-            </div>
-          </div>
+    <div className="pb-4">
+      <h1 className="sr-only">
+        {company?.name ?? "Build&Funish"} — custom furniture, fabrication and interior fit-outs
+      </h1>
 
-          {/* Mobile/tablet: hero on top, tiles as a horizontal-scroll row below */}
-          <div className="lg:hidden">
-            {heroContent}
-            <div className="mt-8 -mx-4 px-4 flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {NAV_TILES.map((t) => (
-                <NavTile key={t.href} {...t} className="w-40 shrink-0 snap-start" />
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Hero */}
+      <section className={`${container} pt-4 sm:pt-6`}>
+        <HeroCarousel products={heroProducts} />
       </section>
 
       {/* Shop by category */}
       {categories.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h2 className="text-xl sm:text-2xl font-black mb-6" style={{ color: "var(--text-primary)" }}>
-            Shop by Category
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <section className={`${container} pt-12 pb-4`}>
+          <SectionHeader title="Shop by category" href="/products" linkLabel="All products" />
+          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 snap-x sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
             {categories.map((c) => {
               const Icon = CATEGORY_ICONS[c.slug] ?? Package;
               return (
                 <Link
                   key={c.id}
                   href={`/products?category=${c.slug}`}
-                  className="group flex flex-col items-center text-center gap-3 rounded-2xl border p-6 transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                  style={{ borderColor: "var(--border)", background: "var(--bg)" }}
+                  className="group w-[42%] shrink-0 snap-start sm:w-auto focus-visible:outline-none"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "var(--accent-light)" }}>
-                    <Icon className="h-6 w-6" style={{ color: "var(--accent-dark)" }} />
+                  <div
+                    className="relative aspect-square sm:aspect-[4/3] overflow-hidden rounded-2xl transition-shadow group-hover:shadow-lg group-focus-visible:ring-2 group-focus-visible:ring-[var(--accent)] group-focus-visible:ring-offset-2"
+                    style={{ background: "var(--well)" }}
+                  >
+                    {c.cover ? (
+                      <img
+                        src={clCard(c.cover)}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center" style={{ color: "var(--accent-dark)" }}>
+                        <Icon className="h-10 w-10" strokeWidth={1.4} aria-hidden="true" />
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{c.name}</p>
+                  <p className="mt-2.5 text-center text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                    {c.name}
+                  </p>
                 </Link>
               );
             })}
@@ -204,56 +184,59 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Admin-curated homepage placements — each toggled per product from
-          the dashboard product form ("Homepage placement" checkboxes). */}
-      <ProductRow title="Sponsored Products" products={sponsoredProducts} />
-      <ProductRow title="Featured Products" products={featuredProducts} alt />
-      <ProductRow title="Top Selling" products={topSellingProducts} />
+      <ProductRow title="Featured products" subtitle="Hand-picked from our workshop" products={featured} />
 
-      {/* Trust badges — compact, not a full showcase section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-          {WHY_CHOOSE_US.map(({ title, icon: Icon }) => (
-            <div key={title} className="flex items-center gap-2">
-              <Icon className="h-4 w-4" style={{ color: "var(--accent)" }} />
-              <span className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>{title}</span>
-            </div>
+      {/* Promo tiles — text + icons, no photos */}
+      <section className={`${container} py-6`}>
+        <div className="grid gap-4 md:grid-cols-3">
+          {PROMO_TILES.map((promo) => (
+            <PromoTile key={promo.title} promo={promo} />
           ))}
         </div>
       </section>
 
-      {/* Recent projects — compact proof of work */}
+      <ProductRow title="Best sellers" subtitle="What our customers order most" products={topSelling} />
+
+      {/* Spotlight banner from the DB (falls back to a text promo) */}
+      <section className={`${container} py-6`}>
+        <SpotlightBanner product={spotlight} />
+      </section>
+
+      <ProductRow title="Sponsored" products={sponsored} />
+
+      {/* Recent projects */}
       {featuredProjects.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-end justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-black" style={{ color: "var(--text-primary)" }}>Recent Projects</h2>
-            <Link href="/projects" className="text-sm font-semibold shrink-0" style={{ color: "var(--accent)" }}>View all →</Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <section className={`${container} py-10`}>
+          <SectionHeader title="Recent projects" subtitle="Work we've designed, built and installed" href="/projects" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {featuredProjects.map((p) => {
               const image = p.images?.[0];
               return (
                 <Link
                   key={p.id}
                   href={`/projects/${p.slug}`}
-                  className="group flex flex-col rounded-2xl overflow-hidden border transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                  style={{ borderColor: "var(--border)", background: "var(--bg)" }}
+                  className="group relative block aspect-[4/3] overflow-hidden rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                  style={{ background: "var(--well)" }}
                 >
-                  <div className="aspect-[4/3] overflow-hidden" style={{ background: "var(--bg-tertiary)" }}>
-                    {image ? (
-                      <img src={clCard(image)} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">🏗️</div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--accent)" }}>
+                  {image ? (
+                    <img
+                      src={clCard(image)}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-4xl" aria-hidden="true">🏗️</div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+                    <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur">
                       {CATEGORY_LABELS[p.category] ?? p.category}
                     </span>
-                    <h3 className="mt-1.5 text-sm font-bold" style={{ color: "var(--text-primary)" }}>{p.title}</h3>
+                    <h3 className="mt-2 text-base font-bold">{p.title}</h3>
                     {p.location && (
-                      <p className="mt-1 flex items-center gap-1 text-xs" style={{ color: "var(--text-secondary)" }}>
-                        <MapPin className="h-3.5 w-3.5" /> {p.location}
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-white/80">
+                        <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> {p.location}
                       </p>
                     )}
                   </div>
@@ -266,49 +249,87 @@ export default async function HomePage() {
 
       {/* Testimonials */}
       {testimonials.length > 0 && (
-        <section className="py-12" style={{ background: "var(--bg-secondary)" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-xl sm:text-2xl font-black mb-8 text-center" style={{ color: "var(--text-primary)" }}>
-              What Our Clients Say
-            </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {testimonials.map((t) => {
-                const name = t.customer_name ?? t.customerName;
-                const title = t.customer_title ?? t.customerTitle;
-                const rating = t.rating ?? 5;
-                return (
-                  <div key={t.id} className="rounded-2xl border p-6" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
-                    <div className="flex gap-0.5 mb-3">
+        <section className={`${container} py-10`}>
+          <SectionHeader title="What our clients say" />
+          <div className="grid gap-4 md:grid-cols-3">
+            {testimonials.map((t) => {
+              const name = t.customer_name ?? t.customerName ?? "Client";
+              const title = t.customer_title ?? t.customerTitle;
+              const rating = Math.max(0, Math.min(5, t.rating ?? 5));
+              const initials = name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+              return (
+                <figure key={t.id} className="flex gap-4 rounded-2xl border p-5" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-extrabold"
+                    style={{ background: "var(--accent-light)", color: "var(--accent-dark)" }}
+                    aria-hidden="true"
+                  >
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex gap-0.5" aria-label={`${rating} out of 5 stars`} role="img">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className="h-4 w-4" fill={i < rating ? "var(--accent)" : "none"} style={{ color: "var(--accent)" }} />
+                        <Star key={i} className="h-3.5 w-3.5" fill={i < rating ? "#d97706" : "none"} style={{ color: "#d97706" }} aria-hidden="true" />
                       ))}
                     </div>
-                    <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>&ldquo;{t.quote}&rdquo;</p>
-                    <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{name}</p>
-                    {title && <p className="text-xs" style={{ color: "var(--text-muted)" }}>{title}</p>}
+                    <blockquote className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                      &ldquo;{t.quote}&rdquo;
+                    </blockquote>
+                    <figcaption className="mt-3">
+                      <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{name}</p>
+                      {title && <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{title}</p>}
+                    </figcaption>
                   </div>
-                );
-              })}
-            </div>
+                </figure>
+              );
+            })}
           </div>
         </section>
       )}
 
-      {/* CTA banner */}
-      <section className="relative overflow-hidden" style={{ background: "#1a1410" }}>
+      {/* Assurance strip */}
+      <section className={`${container} py-8`}>
+        <FeatureStrip />
+      </section>
+
+      {/* CTA band */}
+      <section className={`${container} pt-6 pb-10`}>
         <div
-          className="absolute inset-0 opacity-20"
-          style={{ background: "radial-gradient(circle at 80% 50%, var(--accent), transparent 55%)" }}
-        />
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <h2 className="text-2xl sm:text-4xl font-black text-white">
-            Let&apos;s Build Something Amazing Together
-          </h2>
-          <p className="mt-4 text-base text-white/70">
-            Tell us about your project and we&apos;ll get back to you with a free, no-obligation quote.
+          className="relative overflow-hidden rounded-[28px] px-6 py-12 text-center sm:px-12 sm:py-16"
+          style={{
+            background:
+              "radial-gradient(70% 120% at 50% 0%, rgba(181,98,42,0.4) 0%, transparent 60%), var(--ink)",
+            color: "var(--ink-foreground)",
+          }}
+        >
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--accent-light)" }}>
+            Custom projects
           </p>
-          <div className="mt-8 flex justify-center">
-            <QuoteRequestButton sourceType="general" label="Request a Quote" size="lg" />
+          <h2 className="mx-auto mt-3 max-w-2xl text-2xl sm:text-4xl font-extrabold tracking-tight">
+            Let&apos;s build something great together
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm sm:text-base" style={{ color: "var(--ink-muted)" }}>
+            Tell us about your space and we&apos;ll come back with a free, no-obligation quote.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <QuoteRequestButton sourceType="general" label="Request a quote" size="lg" className="rounded-full" />
+            {whatsapp ? (
+              <a
+                href={waLink(whatsapp, "Hi, I'd like to discuss a project.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-base font-semibold transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" /> Chat on WhatsApp
+              </a>
+            ) : (
+              <Link
+                href="/projects"
+                className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-base font-semibold transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                See our projects <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            )}
           </div>
         </div>
       </section>

@@ -1,23 +1,28 @@
 import Link from "next/link";
-import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Twitter, Youtube, Globe } from "lucide-react";
+import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Twitter, Youtube, Globe, MessageCircle } from "lucide-react";
 import { waLink } from "@/lib/utils";
 import NewsletterForm from "./NewsletterForm";
-import type { Store } from "@/types";
+import type { Store, Category } from "@/types";
 
 interface Props {
   company: Store | null;
+  categories?: Category[];
 }
 
-const QUICK_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
+const COMPANY_LINKS = [
+  { href: "/about", label: "About us" },
   { href: "/services", label: "Services" },
-  { href: "/products", label: "Products" },
   { href: "/projects", label: "Projects" },
   { href: "/gallery", label: "Gallery" },
   { href: "/blog", label: "Blog" },
   { href: "/careers", label: "Careers" },
-  { href: "/contact", label: "Contact" },
+];
+
+const HELP_LINKS = [
+  { href: "/contact", label: "Contact us" },
+  { href: "/account", label: "My account" },
+  { href: "/account/orders", label: "Track an order" },
+  { href: "/affiliate/signup", label: "Become an affiliate" },
 ];
 
 const SOCIAL_ICONS: Record<string, typeof Facebook> = {
@@ -29,7 +34,26 @@ const SOCIAL_ICONS: Record<string, typeof Facebook> = {
   youtube: Youtube,
 };
 
-export default function SiteFooter({ company }: Props) {
+const linkCls =
+  "text-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:underline";
+
+function Column({ title, links }: { title: string; links: { href: string; label: string }[] }) {
+  if (links.length === 0) return null;
+  return (
+    <div>
+      <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-white">{title}</h3>
+      <ul className="space-y-2.5">
+        {links.map((l) => (
+          <li key={l.href}>
+            <Link href={l.href} className={linkCls}>{l.label}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default function SiteFooter({ company, categories = [] }: Props) {
   const companyName = company?.name ?? "Build&Funish";
   const description = company?.description;
   const phone = company?.phone;
@@ -38,15 +62,42 @@ export default function SiteFooter({ company }: Props) {
   const whatsapp = company?.whatsapp;
   const socialLinks = company?.socialLinks ?? company?.social_links ?? {};
 
+  const shopLinks = [
+    { href: "/products", label: "All products" },
+    ...categories.slice(0, 5).map((c) => ({ href: `/products?category=${c.slug}`, label: c.name })),
+  ];
+
   return (
-    <footer style={{ background: "#1a1410", color: "rgba(255,255,255,0.7)" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-        {/* Company blurb */}
-        <div className="lg:col-span-1">
-          <h3 className="text-lg font-black text-white mb-3">{companyName}</h3>
-          {description && <p className="text-sm leading-relaxed mb-5">{description}</p>}
+    <footer className="mt-8" style={{ background: "var(--ink)", color: "var(--ink-muted)" }}>
+      <div className="max-w-7xl mx-auto grid grid-cols-2 gap-10 px-4 py-14 sm:px-6 md:grid-cols-4 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1.5fr] lg:px-8">
+        {/* Brand */}
+        <div className="col-span-2 md:col-span-4 lg:col-span-1">
+          <p className="text-xl font-extrabold tracking-tight text-white">
+            {companyName}<span style={{ color: "var(--accent)" }} aria-hidden="true">.</span>
+          </p>
+          {description && <p className="mt-3 max-w-xs text-sm leading-relaxed">{description}</p>}
+          <ul className="mt-5 space-y-2.5 text-sm">
+            {phone && (
+              <li className="flex items-start gap-2.5">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <a href={`tel:${phone}`} className={linkCls}>{phone}</a>
+              </li>
+            )}
+            {email && (
+              <li className="flex items-start gap-2.5">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <a href={`mailto:${email}`} className={`${linkCls} break-all`}>{email}</a>
+              </li>
+            )}
+            {address && (
+              <li className="flex items-start gap-2.5">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{address}</span>
+              </li>
+            )}
+          </ul>
           {Object.keys(socialLinks).length > 0 && (
-            <div className="flex items-center gap-3">
+            <div className="mt-5 flex items-center gap-2">
               {Object.entries(socialLinks).map(([key, url]) => {
                 if (!url) return null;
                 const Icon = SOCIAL_ICONS[key.toLowerCase()] ?? Globe;
@@ -57,9 +108,9 @@ export default function SiteFooter({ company }: Props) {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={key}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
-                    <Icon className="h-4 w-4 text-white" />
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                   </a>
                 );
               })}
@@ -67,69 +118,33 @@ export default function SiteFooter({ company }: Props) {
           )}
         </div>
 
-        {/* Quick links */}
-        <div>
-          <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Quick Links</h4>
-          <ul className="space-y-2.5">
-            {QUICK_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href} className="text-sm hover:text-white transition-colors">
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Contact details */}
-        <div>
-          <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Contact Us</h4>
-          <ul className="space-y-3 text-sm">
-            {phone && (
-              <li className="flex items-start gap-2.5">
-                <Phone className="h-4 w-4 mt-0.5 shrink-0" />
-                <a href={`tel:${phone}`} className="hover:text-white transition-colors">{phone}</a>
-              </li>
-            )}
-            {email && (
-              <li className="flex items-start gap-2.5">
-                <Mail className="h-4 w-4 mt-0.5 shrink-0" />
-                <a href={`mailto:${email}`} className="hover:text-white transition-colors break-all">{email}</a>
-              </li>
-            )}
-            {address && (
-              <li className="flex items-start gap-2.5">
-                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>{address}</span>
-              </li>
-            )}
-            {whatsapp && (
-              <li>
-                <a
-                  href={waLink(whatsapp, "Hi, I'd like to know more about your services.")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 mt-1 text-sm font-semibold hover:text-white transition-colors"
-                  style={{ color: "var(--accent-light)" }}
-                >
-                  Chat on WhatsApp
-                </a>
-              </li>
-            )}
-          </ul>
-        </div>
+        <Column title="Shop" links={shopLinks} />
+        <Column title="Company" links={COMPANY_LINKS} />
+        <Column title="Help" links={HELP_LINKS} />
 
         {/* Newsletter */}
-        <div>
-          <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Stay Updated</h4>
-          <p className="text-sm mb-4">Subscribe for project updates, tips, and offers.</p>
+        <div className="col-span-2 md:col-span-1">
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-white">Newsletter</h3>
+          <p className="mb-4 text-sm">New products, project stories and offers — straight to your inbox.</p>
           <NewsletterForm />
+          {whatsapp && (
+            <a
+              href={waLink(whatsapp, "Hi, I'd like to know more about your services.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold transition-colors hover:text-white"
+              style={{ color: "var(--accent-light)" }}
+            >
+              <MessageCircle className="h-4 w-4" aria-hidden="true" /> Chat with us on WhatsApp
+            </a>
+          )}
         </div>
       </div>
 
       <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-xs text-center sm:text-left">
-          &copy; {new Date().getFullYear()} {companyName}. All rights reserved.
+        <div className="max-w-7xl mx-auto flex flex-col items-center justify-between gap-3 px-4 py-5 text-xs sm:flex-row sm:px-6 lg:px-8">
+          <p>&copy; {new Date().getFullYear()} {companyName}. All rights reserved.</p>
+          <Link href="/terms" className={linkCls.replace("text-sm", "text-xs")}>Terms &amp; Conditions</Link>
         </div>
       </div>
     </footer>

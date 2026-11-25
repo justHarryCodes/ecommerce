@@ -19,6 +19,16 @@
   --accent-dark: #7c3f16;
   --accent-foreground: #fff;
 
+  /* Storefront rebrand surfaces: a warm near-black "ink" for dark bands
+     (announcement bar, promo banners, footer) and a warm off-white
+     "well" behind product photos — same copper accent on top. */
+  --ink: #17120e;
+  --ink-soft: #241c16;
+  --ink-foreground: #fbf7f3;
+  --ink-muted: rgba(251, 247, 243, 0.68);
+  --well: #f5f1ec;
+  --well-strong: #ece4da;
+
   /* Surfaces */
   --bg: #ffffff;
   --bg-secondary: #fafafa;
@@ -127,6 +137,24 @@ body {
 /* ─── Smooth scroll ─────────────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
+}
+
+/* ─── Storefront helpers ────────────────────────────────────────────────────── */
+/* Horizontal scroller with hidden scrollbar (category rail on mobile). */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Gentle float for decorative icon art in promo banners. */
+@keyframes sf-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sf-float { animation: sf-float 5s ease-in-out infinite; }
+  .sf-float-delay { animation: sf-float 5s ease-in-out 1.2s infinite; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }
 
 /* ─── Image placeholder ─────────────────────────────────────────────────────── */
